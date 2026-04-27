@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:;">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard — Contratos de Energía</title>
@@ -230,60 +229,7 @@
     <span class="pag-total" id="pagTotal">2411 contratos</span>
   </div>
 </div>
-<div style="margin-top: 30px;">
-  <div class="section-label">Actualización desde Excel · <span id="newContractsNote" style="font-weight: 400; color: var(--text3);">No se detectaron contratos nuevos en los archivos cargados</span></div>
-
-  <div class="upload-panel" id="uploadPanel">
-    <div class="upload-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-2 9H9v-2h2v2zm0-4H9v-2h2v2zm4 4h-2v-2h2v2zm0-4h-2v-2h2v2z"></path></svg></div>
-    <div class="upload-text">
-      <strong>Cargar archivos Excel (de la carpeta /data o desde donde estén)</strong>
-      <span>Seleccioná o arrastrá uno o varios .xlsx. Los contratos cuyo número no esté en la base actual quedarán marcados como nuevos.</span>
-    </div>
-    <label class="upload-btn" style="cursor:pointer">
-      Seleccionar archivos
-      <input type="file" id="excelInput" accept=".xlsx,.xls" multiple="" style="display:none">
-    </label>
-    <div class="upload-files-list" id="uploadFilesList" style="display:none"></div>
-  </div>
-
-  <div class="table-section">
-    <div class="table-header">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <div class="table-title">Contratos nuevos detectados</div>
-        <span class="count-badge" id="newBadgeCount">0 contratos</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button id="btnAgregarBase" onclick="agregarABase()" style="display: none; font-family: &quot;IBM Plex Sans&quot;, sans-serif; font-size: 12px; padding: 5px 14px; border: 1px solid rgb(92, 45, 156); border-radius: 6px; background: rgb(243, 238, 255); color: rgb(92, 45, 156); cursor: pointer; align-items: center; gap: 6px; font-weight: 600; transition: background 0.12s;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
-          Agregar a base de datos
-        </button>
-        <button onclick="exportNewExcel()" style="font-family:&#39;IBM Plex Sans&#39;,sans-serif;font-size:12px;padding:5px 14px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .12s,color .12s" onmouseover="this.style.background=&#39;var(--green-bg)&#39;;this.style.color=&#39;var(--green-text)&#39;;this.style.borderColor=&#39;var(--green)&#39;" onmouseout="this.style.background=&#39;var(--surface)&#39;;this.style.color=&#39;var(--text2)&#39;;this.style.borderColor=&#39;var(--border2)&#39;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>
-          Exportar nuevos
-        </button>
-      </div>
-    </div>
-    <div class="new-filter-grid">
-      <div class="fgroup"><label>Buscar</label><input type="text" id="nfSearch" placeholder="Contrato, suministro…"></div>
-      <div class="fgroup"><label>Mes de agregado</label><select id="nfMes"><option value="">Todos los meses</option></select></div>
-      <div class="fgroup"><label>Semana de agregado</label><select id="nfSemana"><option value="">Todas las semanas</option></select></div>
-      <button class="btn-clear" onclick="clearNewFilters()">Limpiar</button>
-    </div>
-    <div class="table-scroll" style="max-height:500px">
-      <table id="newContractsTable">
-        <thead><tr><th style="width:80px;cursor:pointer;user-select:none" onclick="sortNewBy(&#39;nro&#39;)">Contrato</th><th style="min-width:150px;cursor:pointer;user-select:none" onclick="sortNewBy(&#39;suministro&#39;)">Suministro</th><th style="width:140px;cursor:pointer;user-select:none" onclick="sortNewBy(&#39;vendedor&#39;)">Vendedor</th><th style="width:100px;cursor:pointer;user-select:none" onclick="sortNewBy(&#39;generador&#39;)">Generador</th><th style="width:80px;cursor:pointer;user-select:none" onclick="sortNewBy(&#39;inicio&#39;)">Inicio</th><th style="width:80px;cursor:pointer;user-select:none" onclick="sortNewBy(&#39;fin&#39;)">Fin</th><th style="width:120px;cursor:pointer;user-select:none" onclick="sortNewBy(&#39;tope&#39;)">Vol. Anual MWh</th><th style="width:145px;cursor:pointer;user-select:none" onclick="sortNewBy(&#39;tipo&#39;)">Tipo contrato</th><th style="width:115px;cursor:pointer;user-select:none" onclick="sortNewBy(&#39;mes&#39;)">Mes agregado</th><th style="width:125px;cursor:pointer;user-select:none" onclick="sortNewBy(&#39;semana&#39;)">Semana</th></tr></thead>
-        <tbody id="newTableBody"><tr><td colspan="10" class="empty-new">
-      Cargá archivos Excel para ver contratos nuevos
-    </td></tr></tbody>
-      </table>
-    </div>
-    <div class="paginator" id="newPaginator" style="display: none;">
-      <button class="pag-btn" id="btnNewPrev" onclick="changeNewPage(-1)" disabled="">← Ant.</button>
-      <span class="pag-info" id="newPageInfo">1–50</span>
-      <button class="pag-btn" id="btnNewNext" onclick="changeNewPage(1)">Sig. →</button>
-      <span class="pag-total" id="newPagTotal">487 contratos</span>
-    </div>
-  </div></div></main>
+</main>
 
 <script>
 const BLUE='#2155a3',AMBER='#b06a10',GRAY='#ccc9be';
