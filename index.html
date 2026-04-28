@@ -110,6 +110,8 @@
   .tag-new{background:#f0e6ff;color:#5c2d9c;display:inline-block;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;letter-spacing:.02em}
   .new-contracts-kpi{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2)}
   .new-contracts-kpi strong{font-size:20px;font-weight:300;font-family:'IBM Plex Mono',monospace;color:#5c2d9c}
+  .cell-link{cursor:pointer;text-decoration:underline dotted var(--border2)}
+  .cell-link:hover{color:var(--blue);text-decoration:underline solid var(--blue)}
   .empty-new{padding:40px;text-align:center;color:var(--text3);font-size:13px}
   .empty-new svg{width:32px;height:32px;fill:var(--border2);margin:0 auto 8px;display:block}
 
@@ -219,7 +221,7 @@
     </button>
   </div>
   <div class="filter-grid">
-    <div class="fgroup span2"><label>Buscar texto</label><input type="text" id="fSearch" placeholder="Nro contrato, suministro, generador…"></div>
+    <div class="fgroup span2"><label>Buscar texto</label><input type="text" id="fSearch" placeholder="Nro contrato, gran usuario, generador…"></div>
     <div class="fgroup"><label>Tipo recurso</label><select id="fTipo"><option value="">Todos</option><option>Renovable</option><option>No Renovable</option></select></div>
     <div class="fgroup"><label>Precio (U$S/MWh)</label><select id="fPrecio"><option value="">Todos</option><option value="0-30">Menos de 30</option><option value="30-50">30 – 50</option><option value="50-60">50 – 60</option><option value="60-70">60 – 70</option><option value="70-80">70 – 80</option><option value="80-9999">Más de 80</option><option value="null">Sin precio</option></select></div>
     <button class="btn-clear" onclick="clearFilters()" style="grid-row:span 2">Limpiar filtros</button>
@@ -234,7 +236,7 @@
     <table>
       <thead><tr>
         <th data-col="Nro contrato" style="width:78px">Contrato<i class="si"></i></th>
-        <th data-col="Suministro / grupo dem." style="min-width:180px">Suministro<i class="si"></i></th>
+        <th data-col="Suministro / grupo dem." style="min-width:180px">Gran Usuario<i class="si"></i></th>
         <th data-col="Vendedor" style="width:140px">Vendedor<i class="si"></i></th>
         <th data-col="Conj. Generador" style="width:105px">Generador<i class="si"></i></th>
         <th data-col="TIPO RECURSO" style="width:95px">Tipo<i class="si"></i></th>
@@ -436,7 +438,7 @@ function updateCharts(data){
 function exportExcel(){
   const COLS = [
     {key:'Nro contrato',    label:'Nro Contrato'},
-    {key:'Suministro / grupo dem.', label:'Suministro'},
+    {key:'Suministro / grupo dem.', label:'Gran Usuario'},
     {key:'Vendedor',        label:'Vendedor (CUIT)'},
     {key:'_vendedor_nombre',label:'Vendedor (Nombre)'},
     {key:'Conj. Generador', label:'Generador'},
@@ -559,6 +561,21 @@ document.querySelectorAll('th[data-col]').forEach(th=>{
   });
 });
 
+// ── Filtro rápido al hacer click en celda ──────────────
+function setQuickFilter(val) {
+  const input = document.getElementById('fSearch');
+  if (!input) return;
+  if (input.value.trim() === val.trim()) {
+    input.value = '';
+  } else {
+    input.value = val;
+  }
+  applyFilters();
+  // Scroll suave al inicio de la tabla
+  const tableSection = document.querySelector('.table-section');
+  if (tableSection) tableSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 function render(){
   const start=page*PER,end=Math.min(start+PER,filtered.length);
   document.getElementById('tableBody').innerHTML=filtered.slice(start,end).map(r=>{
@@ -574,8 +591,8 @@ function render(){
       :'<span class="vol-txt" style="color:var(--text3)">—</span>';
     return '<tr>'
       +'<td class="mono">'+r['Nro contrato']+'</td>'
-      +'<td title="'+su.replace(/"/g,'&quot;')+'">'+(su.length>34?su.slice(0,34)+'…':su)+'</td>'
-      +'<td title="'+(r['Vendedor']||'')+'">'+vn+'</td>'
+      +'<td title="'+su.replace(/"/g,'&quot;')+'"><span class="cell-link" onclick="setQuickFilter('+JSON.stringify(su)+')">'+(su.length>34?su.slice(0,34)+'…':su)+'</span></td>'
+      +'<td title="'+(r['Vendedor']||'')+'"><span class="cell-link" onclick="setQuickFilter('+JSON.stringify(vn)+')">'+vn+'</span></td>'
       +'<td class="mono" style="font-size:11px">'+(r['Conj. Generador']||'—')+'</td>'
       +'<td><span class="tag '+tc+'">'+(tipo||'—')+'</span></td>'
       +'<td class="mono">'+r.inicio_str+'</td>'
@@ -907,7 +924,8 @@ function updateNewKPIs(){
 // Columnas de la tabla de nuevos
 const NEW_COLS = [
   {id:'nro',       label:'Contrato',       key: r => r['Nro contrato']},
-  {id:'suministro',label:'Suministro',     key: r => r['Suministro / grupo dem.']||''},
+  {id:'suministro',label:'Gran Usuario',    key: r => r['Suministro / grupo dem.']||''},
+    {id:'guma_gume',  label:'GUMA/GUME',    key: r => r['GUMA_GUME']||''},
   {id:'vendedor',  label:'Vendedor',        key: r => CUIT_NAMES[r['Vendedor']]||r['Vendedor']||''},
   {id:'generador', label:'Generador',       key: r => r['Conj. Generador']||''},
   {id:'inicio',    label:'Inicio',          key: r => r.inicio_str||''},
@@ -1030,7 +1048,7 @@ window.agregarABase = function(){
       'Vendedor':                r['Vendedor']||'',
       'Suministro / grupo dem.': r['Suministro / grupo dem.']||'',
       'Conj. Generador':         r['Conj. Generador']||'',
-      'TIPO RECURSO':            r['TIPO RECURSO']||'',
+      'TIPO RECURSO':            r['TIPO RECURSO'] || inferirTipoRecurso(r),
       'inicio_str':              r.inicio_str||'',
       'fin_str':                 r.fin_str||'',
       'precio_usd':              r.precio_usd||null,
