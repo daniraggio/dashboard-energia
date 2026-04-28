@@ -112,6 +112,31 @@
   .new-contracts-kpi strong{font-size:20px;font-weight:300;font-family:'IBM Plex Mono',monospace;color:#5c2d9c}
   .empty-new{padding:40px;text-align:center;color:var(--text3);font-size:13px}
   .empty-new svg{width:32px;height:32px;fill:var(--border2);margin:0 auto 8px;display:block}
+
+  /* ── GitHub Sync ─────────────────────────────────── */
+  .gh-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+  .gh-modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px 30px;max-width:460px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+  .gh-modal h3{font-size:15px;font-weight:600;margin-bottom:6px;letter-spacing:-.01em}
+  .gh-modal p{font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6}
+  .gh-modal label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:4px}
+  .gh-modal input{width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;outline:none;margin-bottom:14px;transition:border-color .15s}
+  .gh-modal input:focus{border-color:var(--blue)}
+  .gh-modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+  .gh-btn-primary{font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:7px 18px;border:none;border-radius:6px;background:var(--blue);color:#fff;cursor:pointer;font-weight:600;transition:opacity .15s}
+  .gh-btn-primary:hover{opacity:.88}
+  .gh-btn-secondary{font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:7px 14px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text2);cursor:pointer;transition:background .15s}
+  .gh-btn-secondary:hover{background:var(--surface2)}
+  .gh-status{display:flex;align-items:center;gap:7px;font-size:11px;padding:4px 0}
+  .gh-status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .gh-status-dot.ok{background:var(--green)}
+  .gh-status-dot.err{background:var(--red)}
+  .gh-status-dot.idle{background:var(--border2)}
+  .gh-status-dot.loading{background:var(--amber);animation:pulse .8s infinite alternate}
+  @keyframes pulse{to{opacity:.3}}
+  .gh-sync-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px;font-size:11px;color:var(--text2)}
+  .gh-sync-bar strong{color:var(--text);font-size:12px}
+  .gh-sync-bar button{margin-left:auto;font-family:'IBM Plex Sans',sans-serif;font-size:10px;padding:3px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);cursor:pointer}
+  .gh-sync-bar button:hover{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)}
 </style>
 </head>
 <body>
@@ -1011,6 +1036,9 @@ window.agregarABase = function(){
       'precio_usd':              r.precio_usd||null,
       'Tipo contrato':           r['Tipo contrato']||'',
       'tope_anual_mwh':          r.tope_anual_mwh||null,
+      '_fechaAgregado':          r._fechaAgregado||new Date().toISOString().slice(0,10),
+      '_mes':                    r._mes||'',
+      '_semana':                 r._semana||'',
     });
     // Actualizar sets de IDs para que no aparezcan como nuevos de vuelta
     EXISTING_IDS.add(r['Nro contrato']);
@@ -1029,10 +1057,197 @@ window.agregarABase = function(){
   // Refrescar el dashboard principal (tabla y KPIs)
   if(typeof applyFilters === 'function') applyFilters();
 
-  alert(`✅ ${cuantos} contrato${cuantos!==1?'s':''} agregado${cuantos!==1?'s':''} a la base. El dashboard principal fue actualizado.`);
+  // ── Guardar en GitHub ──────────────────────────────
+  // Recolectar TODOS los contratos agregados (los que ya estaban + los nuevos)
+  // Para esto usamos los que están en ALL pero no en el dataset original (tienen _fechaAgregado)
+  const todosAgregados = ALL.filter(r => r._fechaAgregado);
+  if(todosAgregados.length > 0){
+    ghSave(todosAgregados).then(ok => {
+      if(ok){
+        alert(`✅ ${cuantos} contrato${cuantos!==1?'s':''} agregado${cuantos!==1?'s':''} a la base y guardado${cuantos!==1?'s':''} en GitHub.\n\nLa próxima vez que abras el dashboard, los datos van a seguir estando.`);
+      } else {
+        alert(`✅ ${cuantos} contrato${cuantos!==1?'s':''} agregado${cuantos!==1?'s':''} a la base (solo en esta sesión).\n\nNo se pudo guardar en GitHub. Configurá el token para que persistan.`);
+      }
+    });
+  } else {
+    alert(`✅ ${cuantos} contrato${cuantos!==1?'s':''} agregado${cuantos!==1?'s':''} a la base. El dashboard principal fue actualizado.`);
+  }
 };
 
-// Event listeners para carga de archivos - se agregan después de inyectar el DOM
+// ═══════════════════════════════════════════════════════
+//  GITHUB PERSISTENCE — guarda contratos_nuevos.json
+// ═══════════════════════════════════════════════════════
+const GH_REPO  = 'daniraggio/dashboard-energia';
+const GH_FILE  = 'contratos_nuevos.json';
+const GH_TOKEN_KEY = 'gh_dashboard_token';
+
+let ghToken    = localStorage.getItem(GH_TOKEN_KEY) || '';
+let ghFileSha  = null;   // SHA del archivo en GitHub (necesario para actualizarlo)
+let ghSyncStatus = 'idle'; // idle | loading | ok | err
+
+// ── UI de estado de sync ──────────────────────────────
+function renderGhSyncBar(){
+  const bar = document.getElementById('ghSyncBar');
+  if(!bar) return;
+  const msgs = {
+    idle:    'Sin conexión a GitHub · Los datos no se guardarán entre sesiones',
+    loading: 'Sincronizando con GitHub…',
+    ok:      'Sincronizado con GitHub · Los datos persisten entre sesiones',
+    err:     'Error al sincronizar con GitHub · Verificá el token',
+  };
+  const dotClass = ghSyncStatus;
+  bar.innerHTML = `
+    <span class="gh-status-dot ${dotClass}"></span>
+    <span>${msgs[ghSyncStatus]||''}</span>
+    <button onclick="openGhModal()">⚙ Configurar token</button>
+  `;
+}
+
+// ── Modal para pedir el token ─────────────────────────
+function openGhModal(){
+  if(document.getElementById('ghModal')) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'ghModal';
+  overlay.className = 'gh-modal-overlay';
+  overlay.innerHTML = `
+    <div class="gh-modal">
+      <h3>🔑 Conectar con GitHub</h3>
+      <p>Para que los contratos nuevos persistan entre sesiones, el dashboard los guarda automáticamente en tu repositorio de GitHub como un archivo <code>contratos_nuevos.json</code>.<br><br>
+      Necesitás un <strong>Personal Access Token (classic)</strong> con permiso <strong>repo</strong>.<br>
+      Podés crearlo en <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--blue)">github.com/settings/tokens</a> → "Generate new token (classic)" → tildá <strong>repo</strong>.</p>
+      <label>Token de GitHub</label>
+      <input type="password" id="ghTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" value="${ghToken}">
+      <div id="ghModalStatus" class="gh-status" style="margin-bottom:12px"></div>
+      <div class="gh-modal-actions">
+        <button class="gh-btn-secondary" onclick="closeGhModal()">Cancelar</button>
+        <button class="gh-btn-primary" onclick="saveGhToken()">Guardar y conectar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeGhModal(); });
+  setTimeout(()=>document.getElementById('ghTokenInput')?.focus(), 50);
+}
+
+function closeGhModal(){
+  document.getElementById('ghModal')?.remove();
+}
+
+async function saveGhToken(){
+  const input = document.getElementById('ghTokenInput');
+  const token = input?.value?.trim();
+  const statusEl = document.getElementById('ghModalStatus');
+  if(!token){ statusEl.innerHTML='<span class="gh-status-dot err"></span> Ingresá un token'; return; }
+  statusEl.innerHTML='<span class="gh-status-dot loading"></span> Verificando…';
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH_REPO}`, {
+      headers:{ Authorization:`Bearer ${token}`, Accept:'application/vnd.github+json' }
+    });
+    if(!r.ok) throw new Error('Token inválido o sin acceso al repo');
+    ghToken = token;
+    localStorage.setItem(GH_TOKEN_KEY, token);
+    statusEl.innerHTML='<span class="gh-status-dot ok"></span> ¡Conectado! Cargando datos…';
+    setTimeout(async ()=>{
+      closeGhModal();
+      await ghLoad();
+    }, 800);
+  } catch(e){
+    statusEl.innerHTML=`<span class="gh-status-dot err"></span> ${e.message}`;
+  }
+}
+
+// ── Cargar datos desde GitHub ─────────────────────────
+async function ghLoad(){
+  if(!ghToken) return;
+  ghSyncStatus = 'loading';
+  renderGhSyncBar();
+  try {
+    const r = await fetch(
+      `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`,
+      { headers:{ Authorization:`Bearer ${ghToken}`, Accept:'application/vnd.github+json' } }
+    );
+    if(r.status === 404){
+      // El archivo no existe aún — está bien, primera vez
+      ghFileSha = null;
+      ghSyncStatus = 'ok';
+      renderGhSyncBar();
+      return;
+    }
+    if(!r.ok) throw new Error('Error al leer el archivo');
+    const data = await r.json();
+    ghFileSha = data.sha;
+    const json = JSON.parse(atob(data.content.replace(/\n/g,'')));
+    if(Array.isArray(json) && json.length){
+      // Restaurar contratos guardados (que no estén ya en ALL)
+      const existIds = new Set(ALL.map(r=>r['Nro contrato']));
+      const nuevos = json.filter(r=>!existIds.has(r['Nro contrato']));
+      if(nuevos.length){
+        nuevos.forEach(r=>{
+          ALL.push(r);
+          EXISTING_IDS.add(r['Nro contrato']);
+          EXISTING_IDS_NORM.add(r['Nro contrato'].replace(/^0+/,''));
+        });
+        if(typeof applyFilters==='function') applyFilters();
+        console.log(`✅ ${nuevos.length} contratos restaurados desde GitHub`);
+      }
+    }
+    ghSyncStatus = 'ok';
+  } catch(e){
+    console.error('ghLoad error:', e);
+    ghSyncStatus = 'err';
+  }
+  renderGhSyncBar();
+}
+
+// ── Guardar datos en GitHub ───────────────────────────
+async function ghSave(contractsToSave){
+  if(!ghToken){
+    openGhModal();
+    return false;
+  }
+  ghSyncStatus = 'loading';
+  renderGhSyncBar();
+  try {
+    // Leer SHA actual si no lo tenemos
+    if(!ghFileSha){
+      const check = await fetch(
+        `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`,
+        { headers:{ Authorization:`Bearer ${ghToken}`, Accept:'application/vnd.github+json' } }
+      );
+      if(check.ok){ const d=await check.json(); ghFileSha=d.sha; }
+    }
+
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(contractsToSave, null, 2))));
+    const body = {
+      message: `Dashboard: ${contractsToSave.length} contrato(s) guardado(s) — ${new Date().toLocaleDateString('es-AR')}`,
+      content,
+      ...(ghFileSha ? { sha: ghFileSha } : {})
+    };
+    const r = await fetch(
+      `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`,
+      { method:'PUT', headers:{ Authorization:`Bearer ${ghToken}`, Accept:'application/vnd.github+json', 'Content-Type':'application/json' }, body:JSON.stringify(body) }
+    );
+    if(!r.ok){ const err=await r.json(); throw new Error(err.message||'Error al guardar'); }
+    const result = await r.json();
+    ghFileSha = result.content?.sha || null;
+    ghSyncStatus = 'ok';
+    renderGhSyncBar();
+    return true;
+  } catch(e){
+    console.error('ghSave error:', e);
+    ghSyncStatus = 'err';
+    renderGhSyncBar();
+    alert('❌ Error al guardar en GitHub:\n' + e.message + '\n\nVerificá que el token tenga permiso "repo".');
+    return false;
+  }
+}
+
+// ── Auto-inicializar al cargar ────────────────────────
+window.addEventListener('load', ()=>{
+  // Esperar a que el DOM de nuevos contratos esté listo
+  setTimeout(()=>{ renderGhSyncBar(); if(ghToken) ghLoad(); }, 300);
+});
+
+
 function initNewContractsUI(){
   const inp = document.getElementById('excelInput');
   if(!inp) return;
@@ -1067,6 +1282,12 @@ function initNewContractsUI(){
   div.style.marginTop='30px';
   div.innerHTML = `
   <div class="section-label">Actualización desde Excel &middot; <span id="newContractsNote" style="font-weight:400;color:var(--text2)">Cargá archivos .xlsx para detectar contratos nuevos</span></div>
+
+  <div class="gh-sync-bar" id="ghSyncBar">
+    <span class="gh-status-dot idle"></span>
+    <span>Sin conexión a GitHub · Los datos no se guardarán entre sesiones</span>
+    <button onclick="openGhModal()">⚙ Configurar token</button>
+  </div>
 
   <div class="upload-panel" id="uploadPanel">
     <div class="upload-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-2 9H9v-2h2v2zm0-4H9v-2h2v2zm4 4h-2v-2h2v2zm0-4h-2v-2h2v2z"/></svg></div>
