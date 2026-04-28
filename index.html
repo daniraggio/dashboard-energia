@@ -1155,29 +1155,24 @@ async function saveGhToken(){
   }
 }
 
-// ── Cargar datos desde GitHub ─────────────────────────
+// ── Cargar datos desde GitHub (URL pública, sin token) ──
 async function ghLoad(){
-  if(!ghToken) return;
   ghSyncStatus = 'loading';
   renderGhSyncBar();
   try {
-    const r = await fetch(
-      `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`,
-      { headers:{ Authorization:`Bearer ${ghToken}`, Accept:'application/vnd.github+json' } }
-    );
+    // raw.githubusercontent.com es público — no requiere token
+    // Cualquier visitante del dashboard puede leer los datos
+    const publicUrl = `https://raw.githubusercontent.com/${GH_REPO}/main/${GH_FILE}?t=${Date.now()}`;
+    const r = await fetch(publicUrl);
     if(r.status === 404){
-      // El archivo no existe aún — está bien, primera vez
       ghFileSha = null;
-      ghSyncStatus = 'ok';
+      ghSyncStatus = ghToken ? 'ok' : 'idle';
       renderGhSyncBar();
       return;
     }
     if(!r.ok) throw new Error('Error al leer el archivo');
-    const data = await r.json();
-    ghFileSha = data.sha;
-    const json = JSON.parse(atob(data.content.replace(/\n/g,'')));
+    const json = await r.json();
     if(Array.isArray(json) && json.length){
-      // Restaurar contratos guardados (que no estén ya en ALL)
       const existIds = new Set(ALL.map(r=>r['Nro contrato']));
       const nuevos = json.filter(r=>!existIds.has(r['Nro contrato']));
       if(nuevos.length){
@@ -1193,7 +1188,7 @@ async function ghLoad(){
     ghSyncStatus = 'ok';
   } catch(e){
     console.error('ghLoad error:', e);
-    ghSyncStatus = 'err';
+    ghSyncStatus = ghToken ? 'err' : 'idle';
   }
   renderGhSyncBar();
 }
@@ -1244,7 +1239,7 @@ async function ghSave(contractsToSave){
 // ── Auto-inicializar al cargar ────────────────────────
 window.addEventListener('load', ()=>{
   // Esperar a que el DOM de nuevos contratos esté listo
-  setTimeout(()=>{ renderGhSyncBar(); if(ghToken) ghLoad(); }, 300);
+  setTimeout(()=>{ renderGhSyncBar(); ghLoad(); }, 300); // ghLoad usa URL pública, no necesita token
 });
 
 
