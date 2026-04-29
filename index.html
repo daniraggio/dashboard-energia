@@ -51,7 +51,7 @@
   .table-title{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text2)}
   .count-badge{font-size:11px;font-family:'IBM Plex Mono',monospace;background:var(--gray-bg);color:var(--text2);padding:2px 8px;border-radius:20px;transition:background .2s,color .2s}
   .count-badge.filtered{background:var(--blue-bg);color:var(--blue-text)}
-  .filter-grid{display:grid;grid-template-columns:repeat(5,1fr) auto;gap:8px;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--surface2);align-items:end}
+  .filter-grid{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:8px;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--surface2);align-items:end}
   .fgroup{display:flex;flex-direction:column;gap:3px}
   .fgroup label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
   .fgroup select,.fgroup input{font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;outline:none;width:100%;transition:border-color .12s}
@@ -87,7 +87,7 @@
   @media(max-width:1100px){
     .kpi-row{grid-template-columns:repeat(3,1fr)}
     .charts-row,.charts-row-2{grid-template-columns:1fr}
-    .filter-grid{grid-template-columns:1fr 1fr 1fr}
+    .filter-grid{grid-template-columns:1fr 1fr}
     .main{padding:14px}
   }
 
@@ -223,7 +223,6 @@
   <div class="filter-grid">
     <div class="fgroup span2"><label>Buscar texto</label><input type="text" id="fSearch" placeholder="Nro contrato, gran usuario, generador…"></div>
     <div class="fgroup"><label>Tipo recurso</label><select id="fTipo"><option value="">Todos</option><option>Renovable</option><option>No Renovable</option></select></div>
-    <div class="fgroup"><label>GUMA / GUME</label><select id="fGumaGume"><option value="">Todos</option><option value="GUMA">GUMA</option><option value="GUME">GUME</option></select></div>
     <div class="fgroup"><label>Precio (U$S/MWh)</label><select id="fPrecio"><option value="">Todos</option><option value="0-30">Menos de 30</option><option value="30-50">30 – 50</option><option value="50-60">50 – 60</option><option value="60-70">60 – 70</option><option value="70-80">70 – 80</option><option value="80-9999">Más de 80</option><option value="null">Sin precio</option></select></div>
     <button class="btn-clear" onclick="clearFilters()" style="grid-row:span 2">Limpiar filtros</button>
     <div class="fgroup"><label>Vendedor</label><select id="fVendedor"><option value="">Todos</option><option value="30-51688824-1">P.Eol. Vientos Olavarría (30-51688824-1)</option><option value="30-52278060-6">P.Eol. Aluar I (30-52278060-6)</option><option value="30-52655265-9">Pampa Energía (30-52655265-9)</option><option value="30-52671272-9">LDC Argentina (30-52671272-9)</option><option value="30-53378967-2">Genneia (30-53378967-2)</option><option value="30-55081599-7">Eol. Buena Ventura (30-55081599-7)</option><option value="30-62971795-8">Helios Santa Rosa 2 (30-62971795-8)</option><option value="30-62982706-0">Agua del Cajón (30-62982706-0)</option><option value="30-65225424-8">Costanera (30-65225424-8)</option><option value="30-65599219-3">Dock Sud (30-65599219-3)</option><option value="30-66346111-3">AES Paraná (30-66346111-3)</option><option value="30-66523411-4">Genneia (30-66523411-4)</option><option value="30-67642119-6">Hid. Los Nihuiles (30-67642119-6)</option><option value="30-69224359-1">Termoandes (30-69224359-1)</option><option value="30-69470158-9">Potrerillos (30-69470158-9)</option><option value="30-70050075-2">Solar de Los Llanos (30-70050075-2)</option><option value="30-70083497-9">Pampa Energía CC (30-70083497-9)</option><option value="30-70882520-0">Solar Anchipurac (30-70882520-0)</option><option value="30-70969733-8">Vientos Neuquinos I (30-70969733-8)</option><option value="30-70982458-5">Solar Victorica (30-70982458-5)</option><option value="30-70983613-3">Eol. Diadema 1 (30-70983613-3)</option><option value="30-71120405-5">FV C.Honda + La Rioja (30-71120405-5)</option><option value="30-71132206-6">Genneia (30-71132206-6)</option><option value="30-71158444-3">Pampa Energía (30-71158444-3)</option><option value="30-71242276-5">Eol. Bicentenario 2 (30-71242276-5)</option><option value="30-71312200-5">Vientos Neuquinos I (30-71312200-5)</option><option value="30-71412830-9">YPF Energía Eléctrica (30-71412830-9)</option><option value="30-71415512-8">P.S. Pampa del Infierno (30-71415512-8)</option><option value="30-71474937-0">PS V. María del Río Seco (30-71474937-0)</option><option value="30-71518744-9">Eol. La Energética (30-71518744-9)</option><option value="30-71526384-6">PS Cura Brochero Ampl. (30-71526384-6)</option><option value="30-71534545-1">Raizen (30-71534545-1)</option><option value="30-71536578-9">PS Amanecer IV (30-71536578-9)</option><option value="30-71539912-8">Eol. 3 Picos (30-71539912-8)</option><option value="30-71556280-0">Vientos Olavarría (30-71556280-0)</option><option value="30-71556281-9">Genoveva+Manq+Ol (30-71556281-9)</option><option value="30-71559121-5">Solar Villa Ángela 1 (30-71559121-5)</option><option value="30-71572949-7">Solar P. Los Llanos (30-71572949-7)</option><option value="30-71592816-3">PE San Luis Norte (30-71592816-3)</option><option value="30-71595899-2">FV La Cumbre 2 (30-71595899-2)</option><option value="30-71609599-8">Eol. La Rinconada (30-71609599-8)</option><option value="30-71609845-8">FV La Cumbre 2 (30-71609845-8)</option><option value="30-71610373-7">PS Cura Brochero (30-71610373-7)</option><option value="30-71610419-9">PS V. María del Río Seco M. (30-71610419-9)</option><option value="30-71617892-3">Eol. Cañadón León (30-71617892-3)</option><option value="30-71644849-1">Genneia (30-71644849-1)</option><option value="30-71729321-1">PS La Salvación (30-71729321-1)</option><option value="30-71765521-0">Solar El Quemado (30-71765521-0)</option><option value="30-71853263-5">Genneia (30-71853263-5)</option><option value="30-71868101-0">Hid. El Chocón (30-71868101-0)</option><option value="30-71868196-7">Hid. Alicurá (30-71868196-7)</option><option value="30-71869033-8">Hid. Cerros Colorados (30-71869033-8)</option><option value="30-71870493-2">Hid. Piedra del Águila (30-71870493-2)</option><option value="30-71872506-9">Solar La Perla (30-71872506-9)</option><option value="30-71882580-2">Solar El Quemado (30-71882580-2)</option><option value="30-71918704-4">Hid. Las Maderas (30-71918704-4)</option><option value="30-99902748-9">EPEC (30-99902748-9)</option><option value="33-61597477-9">Céspedes (33-61597477-9)</option><option value="33-65030549-9">Central Puerto (33-65030549-9)</option><option value="33-68735847-9">Hid. Reyes (33-68735847-9)</option><option value="33-70726132-9">Solar Villa Ángela 1 (33-70726132-9)</option><option value="33-71194489-9">Roca (33-71194489-9)</option><option value="33-71869886-9">Genneia (33-71869886-9)</option></select></div>
@@ -240,7 +239,6 @@
         <th data-col="Suministro / grupo dem." style="min-width:180px">Gran Usuario<i class="si"></i></th>
         <th data-col="Vendedor" style="width:140px">Vendedor<i class="si"></i></th>
         <th data-col="Conj. Generador" style="width:105px">Generador<i class="si"></i></th>
-        <th data-col="GUMA_GUME" style="width:75px">GUMA/GUME<i class="si"></i></th>
         <th data-col="TIPO RECURSO" style="width:95px">Tipo<i class="si"></i></th>
         <th data-col="inicio_str" style="width:88px">Inicio<i class="si"></i></th>
         <th data-col="fin_str" style="width:88px">Fin<i class="si"></i></th>
@@ -248,7 +246,7 @@
         <th data-col="tope_anual_mwh" style="width:155px">Vol. anual (MWh)<i class="si"></i></th>
         <th data-col="Tipo contrato" style="min-width:125px">Tipo contrato<i class="si"></i></th>
       </tr></thead>
-      <tbody id="tableBody"></tbody><tr><td class="mono">001397</td><td title="(AYSALMOY) AYSA - Est Elevadora Matanza">(AYSALMOY) AYSA - Est Elevadora Ma…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001369</td><td title="(AYSAMBCY) AYSA - Planta Manuel Belgrano">(AYSAMBCY) AYSA - Planta Manuel Be…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-05-04</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001367</td><td title="(AYSAMBCY) AYSA - Planta Manuel Belgrano">(AYSAMBCY) AYSA - Planta Manuel Be…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002263</td><td title="HIJOS MUÑOZ - PUERTOCO - P1 05/2025">HIJOS MUÑOZ - PUERTOCO - P1 05/202…</td><td title="30-71534545-1">Raizen</td><td class="mono" style="font-size:11px">LACU2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">65.0 U$S</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:0px"></div><span class="vol-txt">3,6 k</span></div></td><td style="font-size:11px;color:var(--text2)">Con demanda grupal desde acuerdo</td><td></td></tr><tr><td class="mono">001368</td><td title="(AYSAMBCY) AYSA - Planta Manuel Belgrano">(AYSAMBCY) AYSA - Planta Manuel Be…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001261</td><td title="(AYSAMOOY) AYSA - Planta Morón">(AYSAMOOY) AYSA - Planta Morón</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-05-04</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001262</td><td title="(AYSAMOOY) AYSA - Planta Morón">(AYSAMOOY) AYSA - Planta Morón</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001263</td><td title="(AYSAMOOY) AYSA - Planta Morón">(AYSAMOOY) AYSA - Planta Morón</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001784</td><td title="(AYSAPACY) AYSA - Est Elevadora Paitovi">(AYSAPACY) AYSA - Est Elevadora Pa…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-05-04</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001783</td><td title="(AYSAPACY) AYSA - Est Elevadora Paitovi">(AYSAPACY) AYSA - Est Elevadora Pa…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001786</td><td title="(AYSAPACY) AYSA - Est Elevadora Paitovi">(AYSAPACY) AYSA - Est Elevadora Pa…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002200</td><td title="(ORCOMAON) ORGANIZACION COURIER ARGENTINA">(ORCOMAON) ORGANIZACION COURIER AR…</td><td title="30-66523411-4">Genneia</td><td class="mono" style="font-size:11px">GENNEI10</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">59.0 U$S</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:0px"></div><span class="vol-txt">6,0 k</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002387</td><td title="(ORCOMAON) ORGANIZACION COURIER ARGENTINA">(ORCOMAON) ORGANIZACION COURIER AR…</td><td title="30-66523411-4">Genneia</td><td class="mono" style="font-size:11px">RAWSON 3</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">59.0 U$S</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:60px"></div><span class="vol-txt">12,00 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">003573</td><td title="(ESANJUJD) NATURGY SAN JUAN S.A.">(ESANJUJD) NATURGY SAN JUAN S.A.</td><td title="30-70882520-0">Solar Anchipurac</td><td class="mono" style="font-size:11px">CARACOLE</td><td><span class="tag tag-nr">No Renovable</span></td><td class="mono">2025-12-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:12px"></div><span class="vol-txt">2,40 M</span></div></td><td style="font-size:11px;color:var(--text2)">Distribuidor</td><td></td></tr><tr><td class="mono">001551</td><td title="(AYSAQICY) AYSA - Pta Elevadora Quilmes">(AYSAQICY) AYSA - Pta Elevadora Qu…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-05-04</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001553</td><td title="(AYSAQICY) AYSA - Pta Elevadora Quilmes">(AYSAQICY) AYSA - Pta Elevadora Qu…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001352</td><td title="(AYSASMOY) AYSA - Planta San Martin">(AYSASMOY) AYSA - Planta San Marti…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-05-04</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">004780</td><td title="(PSUDLVMY) PETROLEOS SUDAMERICANOS S.A.">(PSUDLVMY) PETROLEOS SUDAMERICANOS…</td><td title="30-65599219-3">Dock Sud</td><td class="mono" style="font-size:11px">DOCKSUD</td><td><span class="tag tag-nr">No Renovable</span></td><td class="mono">2025-12-01</td><td class="mono">2026-04-30</td><td class="mono">64.5 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001353</td><td title="(AYSASMOY) AYSA - Planta San Martin">(AYSASMOY) AYSA - Planta San Marti…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001354</td><td title="(AYSASMOY) AYSA - Planta San Martin">(AYSASMOY) AYSA - Planta San Marti…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001741</td><td title="(AYSATBCY) AGUA Y SANEA-TORRE BLANCA">(AYSATBCY) AGUA Y SANEA-TORRE BLAN…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-05-04</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002348</td><td title="(AIRLVCSY) AIR LIQUIDE - V.Constitucion">(AIRLVCSY) AIR LIQUIDE - V.Constit…</td><td title="30-71556281-9">Genoveva+Manq+Ol</td><td class="mono" style="font-size:11px">GENOVEV4</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002347</td><td title="(AIRLVCSY) AIR LIQUIDE - V.Constitucion">(AIRLVCSY) AIR LIQUIDE - V.Constit…</td><td title="30-71556281-9">Genoveva+Manq+Ol</td><td class="mono" style="font-size:11px">GENOVEV4</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002346</td><td title="(AIRLVCSY) AIR LIQUIDE - V.Constitucion">(AIRLVCSY) AIR LIQUIDE - V.Constit…</td><td title="30-71556281-9">Genoveva+Manq+Ol</td><td class="mono" style="font-size:11px">GENOVEV4</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002291</td><td title="(AIRLSN1Y) AIR LIQUIDE - P3 SIDERAR">(AIRLSN1Y) AIR LIQUIDE - P3 SIDERA…</td><td title="30-71556281-9">Genoveva+Manq+Ol</td><td class="mono" style="font-size:11px">GENOVEV4</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002290</td><td title="(AIRLSN1Y) AIR LIQUIDE - P3 SIDERAR">(AIRLSN1Y) AIR LIQUIDE - P3 SIDERA…</td><td title="30-71556281-9">Genoveva+Manq+Ol</td><td class="mono" style="font-size:11px">GENOVEV4</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002289</td><td title="(AIRLSN1Y) AIR LIQUIDE - P3 SIDERAR">(AIRLSN1Y) AIR LIQUIDE - P3 SIDERA…</td><td title="30-71556281-9">Genoveva+Manq+Ol</td><td class="mono" style="font-size:11px">GENOVEV4</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002338</td><td title="(AIRLNSIY) AIR LIQUIDE - Ensenada">(AIRLNSIY) AIR LIQUIDE - Ensenada</td><td title="30-71556281-9">Genoveva+Manq+Ol</td><td class="mono" style="font-size:11px">GENOVEV4</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001552</td><td title="(AYSAQICY) AYSA - Pta Elevadora Quilmes">(AYSAQICY) AYSA - Pta Elevadora Qu…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr></tbody>
+      <tbody id="tableBody"><tr><td class="mono">002340</td><td title="(BUCHDGHN) HERNAN BUCHHOLZ S.A. 2">(BUCHDGHN) HERNAN BUCHHOLZ S.A. 2</td><td title="30-71132206-6">Genneia</td><td class="mono" style="font-size:11px">GENNEIA8</td><td><span class="tag tag-na">—</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">63.0 U$S</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente desde acuerdo</td><td></td></tr><tr><td class="mono">001397</td><td title="(AYSALMOY) AYSA - Est Elevadora Matanza">(AYSALMOY) AYSA - Est Elevadora Ma…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001369</td><td title="(AYSAMBCY) AYSA - Planta Manuel Belgrano">(AYSAMBCY) AYSA - Planta Manuel Be…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-05-04</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001367</td><td title="(AYSAMBCY) AYSA - Planta Manuel Belgrano">(AYSAMBCY) AYSA - Planta Manuel Be…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002263</td><td title="HIJOS MUÑOZ - PUERTOCO - P1 05/2025">HIJOS MUÑOZ - PUERTOCO - P1 05/202…</td><td title="30-71534545-1">Raizen</td><td class="mono" style="font-size:11px">LACU2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">65.0 U$S</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:0px"></div><span class="vol-txt">3,6 k</span></div></td><td style="font-size:11px;color:var(--text2)">Con demanda grupal desde acuerdo</td><td></td></tr><tr><td class="mono">001368</td><td title="(AYSAMBCY) AYSA - Planta Manuel Belgrano">(AYSAMBCY) AYSA - Planta Manuel Be…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001261</td><td title="(AYSAMOOY) AYSA - Planta Morón">(AYSAMOOY) AYSA - Planta Morón</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-05-04</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001262</td><td title="(AYSAMOOY) AYSA - Planta Morón">(AYSAMOOY) AYSA - Planta Morón</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001263</td><td title="(AYSAMOOY) AYSA - Planta Morón">(AYSAMOOY) AYSA - Planta Morón</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001784</td><td title="(AYSAPACY) AYSA - Est Elevadora Paitovi">(AYSAPACY) AYSA - Est Elevadora Pa…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-05-04</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001783</td><td title="(AYSAPACY) AYSA - Est Elevadora Paitovi">(AYSAPACY) AYSA - Est Elevadora Pa…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001786</td><td title="(AYSAPACY) AYSA - Est Elevadora Paitovi">(AYSAPACY) AYSA - Est Elevadora Pa…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002200</td><td title="(ORCOMAON) ORGANIZACION COURIER ARGENTINA">(ORCOMAON) ORGANIZACION COURIER AR…</td><td title="30-66523411-4">Genneia</td><td class="mono" style="font-size:11px">GENNEI10</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">59.0 U$S</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:0px"></div><span class="vol-txt">6,0 k</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002387</td><td title="(ORCOMAON) ORGANIZACION COURIER ARGENTINA">(ORCOMAON) ORGANIZACION COURIER AR…</td><td title="30-66523411-4">Genneia</td><td class="mono" style="font-size:11px">RAWSON 3</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">59.0 U$S</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:60px"></div><span class="vol-txt">12,00 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">003573</td><td title="(ESANJUJD) NATURGY SAN JUAN S.A.">(ESANJUJD) NATURGY SAN JUAN S.A.</td><td title="30-70882520-0">Solar Anchipurac</td><td class="mono" style="font-size:11px">CARACOLE</td><td><span class="tag tag-nr">No Renovable</span></td><td class="mono">2025-12-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:12px"></div><span class="vol-txt">2,40 M</span></div></td><td style="font-size:11px;color:var(--text2)">Distribuidor</td><td></td></tr><tr><td class="mono">001551</td><td title="(AYSAQICY) AYSA - Pta Elevadora Quilmes">(AYSAQICY) AYSA - Pta Elevadora Qu…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-05-04</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001553</td><td title="(AYSAQICY) AYSA - Pta Elevadora Quilmes">(AYSAQICY) AYSA - Pta Elevadora Qu…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001352</td><td title="(AYSASMOY) AYSA - Planta San Martin">(AYSASMOY) AYSA - Planta San Marti…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-05-04</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">004780</td><td title="(PSUDLVMY) PETROLEOS SUDAMERICANOS S.A.">(PSUDLVMY) PETROLEOS SUDAMERICANOS…</td><td title="30-65599219-3">Dock Sud</td><td class="mono" style="font-size:11px">DOCKSUD</td><td><span class="tag tag-nr">No Renovable</span></td><td class="mono">2025-12-01</td><td class="mono">2026-04-30</td><td class="mono">64.5 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001353</td><td title="(AYSASMOY) AYSA - Planta San Martin">(AYSASMOY) AYSA - Planta San Marti…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001354</td><td title="(AYSASMOY) AYSA - Planta San Martin">(AYSASMOY) AYSA - Planta San Marti…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001741</td><td title="(AYSATBCY) AGUA Y SANEA-TORRE BLANCA">(AYSATBCY) AGUA Y SANEA-TORRE BLAN…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-05-04</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002348</td><td title="(AIRLVCSY) AIR LIQUIDE - V.Constitucion">(AIRLVCSY) AIR LIQUIDE - V.Constit…</td><td title="30-71556281-9">Genoveva+Manq+Ol</td><td class="mono" style="font-size:11px">GENOVEV4</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002347</td><td title="(AIRLVCSY) AIR LIQUIDE - V.Constitucion">(AIRLVCSY) AIR LIQUIDE - V.Constit…</td><td title="30-71556281-9">Genoveva+Manq+Ol</td><td class="mono" style="font-size:11px">GENOVEV4</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002346</td><td title="(AIRLVCSY) AIR LIQUIDE - V.Constitucion">(AIRLVCSY) AIR LIQUIDE - V.Constit…</td><td title="30-71556281-9">Genoveva+Manq+Ol</td><td class="mono" style="font-size:11px">GENOVEV4</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002291</td><td title="(AIRLSN1Y) AIR LIQUIDE - P3 SIDERAR">(AIRLSN1Y) AIR LIQUIDE - P3 SIDERA…</td><td title="30-71556281-9">Genoveva+Manq+Ol</td><td class="mono" style="font-size:11px">GENOVEV4</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002290</td><td title="(AIRLSN1Y) AIR LIQUIDE - P3 SIDERAR">(AIRLSN1Y) AIR LIQUIDE - P3 SIDERA…</td><td title="30-71556281-9">Genoveva+Manq+Ol</td><td class="mono" style="font-size:11px">GENOVEV4</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002289</td><td title="(AIRLSN1Y) AIR LIQUIDE - P3 SIDERAR">(AIRLSN1Y) AIR LIQUIDE - P3 SIDERA…</td><td title="30-71556281-9">Genoveva+Manq+Ol</td><td class="mono" style="font-size:11px">GENOVEV4</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">002338</td><td title="(AIRLNSIY) AIR LIQUIDE - Ensenada">(AIRLNSIY) AIR LIQUIDE - Ensenada</td><td title="30-71556281-9">Genoveva+Manq+Ol</td><td class="mono" style="font-size:11px">GENOVEV4</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2025-05-01</td><td class="mono">2026-04-30</td><td class="mono">—</td><td><div class="vol-bar-wrap"><div class="vol-bar" style="width:6px"></div><span class="vol-txt">1,20 M</span></div></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr><tr><td class="mono">001552</td><td title="(AYSAQICY) AYSA - Pta Elevadora Quilmes">(AYSAQICY) AYSA - Pta Elevadora Qu…</td><td title="30-62971795-8">Helios Santa Rosa 2</td><td class="mono" style="font-size:11px">HELIO2</td><td><span class="tag tag-r">Renovable</span></td><td class="mono">2024-11-01</td><td class="mono">2026-04-30</td><td class="mono">69.2 U$S</td><td><span class="vol-txt" style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text2)">Un solo agente</td><td></td></tr></tbody>
     </table>
   </div>
   <div class="paginator">
@@ -489,18 +487,16 @@ function applyFilters(){
   const tc=document.getElementById('fTipoContrato').value;
   const precio=document.getElementById('fPrecio').value;
   const vol=document.getElementById('fVol').value;
-  const gg=document.getElementById('fGumaGume').value;
   const iniD=document.getElementById('fIniDesde').value;
   const iniH=document.getElementById('fIniHasta').value;
   const finD=document.getElementById('fFinDesde').value;
   const finH=document.getElementById('fFinHasta').value;
-  isFiltered=!!(search||tipo||vend||gen||tc||precio||vol||gg||iniD||iniH||finD||finH||zoomedYear!==null||activeBarLabel!==null);
+  isFiltered=!!(search||tipo||vend||gen||tc||precio||vol||iniD||iniH||finD||finH||zoomedYear!==null||activeBarLabel!==null);
   filtered=ALL.filter(r=>{
     if(tipo&&r['TIPO RECURSO']!==tipo)return false;
     if(vend&&r['Vendedor']!==vend)return false;
     if(gen&&r['Conj. Generador']!==gen)return false;
     if(tc&&r['Tipo contrato']!==tc)return false;
-    if(gg&&r['GUMA_GUME']!==gg)return false;
     if(precio){
       if(precio==='null'){if(r.precio_usd!=null)return false;}
       else{const[lo,hi]=precio.split('-').map(Number);if(r.precio_usd==null||r.precio_usd<lo||r.precio_usd>=hi)return false;}
@@ -547,7 +543,7 @@ function applyFilters(){
 }
 
 function clearFilters(){
-  ['fSearch','fTipo','fVendedor','fGenerador','fTipoContrato','fPrecio','fVol','fGumaGume','fIniDesde','fIniHasta','fFinDesde','fFinHasta'].forEach(id=>{document.getElementById(id).value='';});
+  ['fSearch','fTipo','fVendedor','fGenerador','fTipoContrato','fPrecio','fVol','fIniDesde','fIniHasta','fFinDesde','fFinHasta'].forEach(id=>{document.getElementById(id).value='';});
   activeBarLabel=null;
   zoomedYear=null;
   chartAnio.data.datasets.forEach(ds=>{ds.backgroundColor=ds.label==='Renovable'?BA:AA;});
@@ -566,19 +562,16 @@ document.querySelectorAll('th[data-col]').forEach(th=>{
 });
 
 // ── Filtro rápido al hacer click en celda ──────────────
-// type: 'vendedor' (CUIT) | 'suministro' (texto)
-function setQuickFilter(type, val) {
-  if (type === 'vendedor') {
-    const sel = document.getElementById('fVendedor');
-    if (!sel) return;
-    sel.value = (sel.value === val) ? '' : val;
+function setQuickFilter(val) {
+  const input = document.getElementById('fSearch');
+  if (!input) return;
+  if (input.value.trim() === val.trim()) {
+    input.value = '';
   } else {
-    // Gran Usuario: buscar texto libre
-    const input = document.getElementById('fSearch');
-    if (!input) return;
-    input.value = (input.value.trim() === val.trim()) ? '' : val;
+    input.value = val;
   }
   applyFilters();
+  // Scroll suave al inicio de la tabla
   const tableSection = document.querySelector('.table-section');
   if (tableSection) tableSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -591,23 +584,16 @@ function render(){
     const pr=r.precio_usd!=null?r.precio_usd.toFixed(1)+' U$S':'—';
     const su=r['Suministro / grupo dem.']||'';
     const vn=CUIT_NAMES[r['Vendedor']]||r['Vendedor']||'—';
-    const vcuit=r['Vendedor']||'';
     const v=r.tope_anual_mwh;
     const barW=v!=null?Math.round(Math.min(v/volMax,1)*60):0;
     const volCell=v!=null
       ?'<div class="vol-bar-wrap"><div class="vol-bar" style="width:'+barW+'px"></div><span class="vol-txt">'+fmtMwh(v)+'</span></div>'
       :'<span class="vol-txt" style="color:var(--text3)">—</span>';
-    // GUMA/GUME tag
-    const gg=r['GUMA_GUME']||'';
-    const ggCell=gg
-      ?'<span class="tag" style="background:'+(gg==='GUMA'?'#e8f5ee':gg==='GUME'?'#edf2fc':'#f5f3ff')+';color:'+(gg==='GUMA'?'#1d5131':gg==='GUME'?'#1a4282':'#4c1d95')+'">'+gg+'</span>'
-      :'<span style="color:var(--text3);font-size:11px">—</span>';
     return '<tr>'
       +'<td class="mono">'+r['Nro contrato']+'</td>'
-      +'<td title="'+su.replace(/"/g,'&quot;')+'"><span class="cell-link" onclick="setQuickFilter(\'suministro\','+JSON.stringify(su)+')">'+(su.length>34?su.slice(0,34)+'…':su)+'</span></td>'
-      +'<td title="'+vcuit+'"><span class="cell-link" onclick="setQuickFilter(\'vendedor\','+JSON.stringify(vcuit)+')">'+vn+'</span></td>'
+      +'<td title="'+su.replace(/"/g,'&quot;')+'"><span class="cell-link" onclick="setQuickFilter('+JSON.stringify(su)+')">'+(su.length>34?su.slice(0,34)+'…':su)+'</span></td>'
+      +'<td title="'+(r['Vendedor']||'')+'"><span class="cell-link" onclick="setQuickFilter('+JSON.stringify(vn)+')">'+vn+'</span></td>'
       +'<td class="mono" style="font-size:11px">'+(r['Conj. Generador']||'—')+'</td>'
-      +'<td>'+ggCell+'</td>'
       +'<td><span class="tag '+tc+'">'+(tipo||'—')+'</span></td>'
       +'<td class="mono">'+r.inicio_str+'</td>'
       +'<td class="mono">'+r.fin_str+'</td>'
@@ -626,7 +612,7 @@ function render(){
 
 window.changePage=function(d){page+=d;render();};
 
-['fTipo','fVendedor','fGenerador','fTipoContrato','fPrecio','fVol','fGumaGume','fIniDesde','fIniHasta','fFinDesde','fFinHasta'].forEach(id=>
+['fTipo','fVendedor','fGenerador','fTipoContrato','fPrecio','fVol','fIniDesde','fIniHasta','fFinDesde','fFinHasta'].forEach(id=>
   document.getElementById(id).addEventListener('change',applyFilters));
 let st;
 document.getElementById('fSearch').addEventListener('input',function(){clearTimeout(st);st=setTimeout(applyFilters,250);});
@@ -801,29 +787,12 @@ function normalizeContratosRow(row){
   const inicioDate = parseExcelDate(inicioRaw);
   const finDate    = parseExcelDate(finRaw);
 
-  // Detectar GUMA/GUME: buscar columna que contenga 'guma' o 'gume' en su nombre
-  let gumaGume = '';
-  for(const k of keys){
-    const nk = norm(k);
-    if(nk.includes('guma') || nk.includes('gume')){
-      const v = row[k];
-      if(v){
-        const vs = String(v).trim().toUpperCase();
-        if(vs.includes('GUMA')) gumaGume = 'GUMA';
-        else if(vs.includes('GUME')) gumaGume = 'GUME';
-        else if(vs) gumaGume = vs.slice(0,8);
-      }
-      break;
-    }
-  }
-
   return {
     'Nro contrato':            nro,
     'Vendedor':                get('Vendedor','vendedor','VENDEDOR'),
     'Suministro / grupo dem.': get('Suministro / grupo dem.','Suministro','suministro'),
     'Conj. Generador':         get('Conj. Generador','Generador','generador','Conj Generador'),
     'TIPO RECURSO':            '',   // No viene en estos Excel
-    'GUMA_GUME':               gumaGume,
     'inicio_str':              dateToStr(inicioDate),
     'fin_str':                 dateToStr(finDate),
     'precio_usd':              null, // No viene en estos Excel
@@ -865,11 +834,6 @@ function processFiles(files){
 function finalizarCarga(wbsList, todayStr, semana, mes){
   const contratoRows = parseAllWorkbooks(wbsList);
   const newFound = [];
-  let enrichedCount = 0;
-
-  // Mapa de contratos existentes por nro para enriquecimiento rápido
-  const existingMap = {};
-  ALL.forEach(r => { existingMap[r['Nro contrato']] = r; });
 
   contratoRows.forEach(rawRow => {
     const row = normalizeContratosRow(rawRow);
@@ -877,48 +841,7 @@ function finalizarCarga(wbsList, todayStr, semana, mes){
     const nroId     = row['Nro contrato'];
     const nroNorm   = nroId.replace(/^0+/, '');
     const yaExiste  = EXISTING_IDS.has(nroId) || EXISTING_IDS_NORM.has(nroNorm);
-
-    if(yaExiste) {
-      // ── Enriquecimiento: completar campos faltantes en el registro existente ──
-      const existing = existingMap[nroId] || existingMap[nroNorm] ||
-                       ALL.find(r => r['Nro contrato'].replace(/^0+/,'') === nroNorm);
-      if(existing){
-        let changed = false;
-        // Generador
-        if(!existing['Conj. Generador'] && row['Conj. Generador']){
-          existing['Conj. Generador'] = row['Conj. Generador'];
-          changed = true;
-        }
-        // GUMA/GUME
-        if(!existing['GUMA_GUME'] && row['GUMA_GUME']){
-          existing['GUMA_GUME'] = row['GUMA_GUME'];
-          changed = true;
-        }
-        // Vendedor
-        if(!existing['Vendedor'] && row['Vendedor']){
-          existing['Vendedor'] = row['Vendedor'];
-          changed = true;
-        }
-        // Tipo contrato
-        if(!existing['Tipo contrato'] && row['Tipo contrato']){
-          existing['Tipo contrato'] = row['Tipo contrato'];
-          changed = true;
-        }
-        // Tope anual (desde topeMap)
-        if(!existing['tope_anual_mwh']){
-          const tope = topeMap[nroId] || topeMap[nroNorm] || null;
-          if(tope){ existing['tope_anual_mwh'] = tope; changed = true; }
-        }
-        // Tipo recurso (inferir si falta)
-        if(!existing['TIPO RECURSO'] || existing['TIPO RECURSO'] === ''){
-          const inferred = inferirTipoRecurso(existing);
-          if(inferred){ existing['TIPO RECURSO'] = inferred; changed = true; }
-        }
-        if(changed) enrichedCount++;
-      }
-      return;
-    }
-
+    if(yaExiste) return;
     if(newContracts.some(x => x['Nro contrato'] === nroId)) return;
     if(newFound.some(x => x['Nro contrato'] === nroId)) return;
 
@@ -938,15 +861,6 @@ function finalizarCarga(wbsList, todayStr, semana, mes){
   buildNewFilters();
   applyNewFilters();
   updateNewNote();
-
-  // Si se enriquecieron registros existentes, refrescar el dashboard principal
-  if(enrichedCount > 0){
-    if(typeof applyFilters === 'function') applyFilters();
-    const note = `ℹ️ Se completaron datos faltantes en ${enrichedCount} contrato${enrichedCount!==1?'s':''} existente${enrichedCount!==1?'s':''} (generador, GUMA/GUME, tipo, etc.)`;
-    const el = document.getElementById('newContractsNote');
-    const prev = el.textContent;
-    el.textContent = prev + (prev ? ' · ' : '') + note.replace('ℹ️ ','');
-  }
 }
 
 function updateNewNote(){
@@ -1135,7 +1049,6 @@ window.agregarABase = function(){
       'Suministro / grupo dem.': r['Suministro / grupo dem.']||'',
       'Conj. Generador':         r['Conj. Generador']||'',
       'TIPO RECURSO':            r['TIPO RECURSO'] || inferirTipoRecurso(r),
-      'GUMA_GUME':               r['GUMA_GUME']||'',
       'inicio_str':              r.inicio_str||'',
       'fin_str':                 r.fin_str||'',
       'precio_usd':              r.precio_usd||null,
