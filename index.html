@@ -3,7 +3,7 @@
 <!--
 ================================================================================
 DASHBOARD DE CONTRATOS DE ENERGÍA — DOCUMENTACIÓN INTERNA (solo para Claude)
-Versión: 18
+Versión: 17
 Repositorio: daniraggio/dashboard-energia
 URL: https://daniraggio.github.io/dashboard-energia/
 ================================================================================
@@ -66,13 +66,12 @@ v14: Lectura pública sin token para visitantes
 v15: Renombrar "Suministro" → "Gran Usuario"; columna GUMA/GUME; celdas clickeables; inferencia tipo recurso
 v16: [misma sesión que v15, entregada como versión de corrección de bugs]
 v17: Columna "Puntos de Suministro" (desde SUMINISTROS.xlsx); documentación interna; número de versión visible
-v18: Popover al click en "+X más" muestra todos los NEMOs; búsqueda por NEMO incluye contratos de demanda grupal; versión visible en badge arriba a la derecha
 ================================================================================
 -->
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard — Contratos de Energía v18</title>
+<title>Dashboard — Contratos de Energía v17</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -186,21 +185,6 @@ v18: Popover al click en "+X más" muestra todos los NEMOs; búsqueda por NEMO i
 
   /* ── GitHub Sync ─────────────────────────────────── */
 
-
-  /* ── Popover Puntos de Suministro ─────────────────── */
-  .ps-popover-overlay{position:fixed;inset:0;z-index:8000}
-  .ps-popover{position:fixed;background:var(--surface);border:1px solid var(--border);
-              border-radius:var(--radius-lg);box-shadow:0 8px 32px rgba(0,0,0,.15);
-              padding:14px 16px;z-index:8001;min-width:220px;max-width:320px;max-height:380px;
-              overflow-y:auto}
-  .ps-popover-title{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-                    color:var(--text3);margin-bottom:10px}
-  .ps-popover-grid{display:flex;flex-wrap:wrap;gap:4px}
-  .ps-popover .ps-tag{font-size:10px;padding:2px 7px}
-  .ps-more{cursor:pointer;font-size:9px;color:var(--blue);font-weight:600;padding:1px 4px;
-           border-radius:3px;border:1px solid var(--blue);background:var(--blue-bg);
-           white-space:nowrap;transition:background .1s}
-  .ps-more:hover{background:var(--blue);color:#fff}
   /* ── Puntos de Suministro ──────────────────────────── */
   .ps-wrap{display:flex;flex-wrap:wrap;gap:2px;padding:2px 0}
   .ps-tag{display:inline-block;background:var(--blue-bg);color:var(--blue-text);
@@ -243,7 +227,7 @@ v18: Popover al click en "+X más" muestra todos los NEMOs; búsqueda por NEMO i
       <div class="header-sub">Análisis unificado · 5 fuentes de datos</div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:12px"><span style="background:var(--blue);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em">v18</span><div class="header-date">Actualizado: 24/04/2026</div></div>
+  <div class="header-date">Actualizado: 24/04/2026</div>
 </header>
 <main class="main">
 <div class="section-label">Métricas generales</div>
@@ -602,9 +586,7 @@ function applyFilters(){
     if(finD&&r.fin_str.slice(0,7)<finD)return false;
     if(finH&&r.fin_str.slice(0,7)>finH)return false;
     if(search){
-      // También buscar en los NEMOs de suministros agrupados
-      const psNemos = getPuntosSuministro(r['Nro contrato']).join(' ').toLowerCase();
-      const hay=(r['Nro contrato']+' '+r['Suministro / grupo dem.']+' '+r['Conj. Generador']+' '+(r['Vendedor']||'')+' '+(CUIT_NAMES[r['Vendedor']]||'')+' '+psNemos).toLowerCase();
+      const hay=(r['Nro contrato']+' '+r['Suministro / grupo dem.']+' '+r['Conj. Generador']+' '+(r['Vendedor']||'')+' '+(CUIT_NAMES[r['Vendedor']]||'')).toLowerCase();
       if(!hay.includes(search))return false;
     }
     // bar chart click filter
@@ -673,58 +655,22 @@ function setQuickFilter(val) {
 
 // ── Puntos de Suministro por contrato ─────────────────
 function getPuntosSuministro(nroContrato) {
+  // Buscar con y sin ceros a la izquierda
   const nroStr = String(nroContrato);
   const nroNorm = nroStr.replace(/^0+/, '');
-  return SUMINISTROS_BY_CONTRACT[nroStr] || SUMINISTROS_BY_CONTRACT[nroNorm] || [];
+  const ps = SUMINISTROS_BY_CONTRACT[nroStr] || SUMINISTROS_BY_CONTRACT[nroNorm] || [];
+  return ps;
 }
 function renderPSCell(nroContrato, tipoContrato) {
   const tipo = (tipoContrato || '').toLowerCase();
-  if (!tipo.includes('grupal')) return '<td></td>';
+  const esGrupal = tipo.includes('grupal');
+  if (!esGrupal) return '<td></td>';
   const ps = getPuntosSuministro(nroContrato);
   if (!ps.length) return '<td></td>';
   const MAX_SHOW = 4;
   const tags = ps.slice(0, MAX_SHOW).map(n => '<span class="ps-tag">'+n+'</span>').join('');
-  const more = ps.length > MAX_SHOW
-    ? '<span class="ps-more" onclick="showPSPopover(event,''+nroContrato+'')">+'+(ps.length-MAX_SHOW)+' más</span>'
-    : '';
+  const more = ps.length > MAX_SHOW ? '<span class="ps-more">+' + (ps.length - MAX_SHOW) + ' más</span>' : '';
   return '<td><div class="ps-wrap">' + tags + more + '</div></td>';
-}
-
-// ── Popover con todos los NEMOs ────────────────────────
-function showPSPopover(event, nroContrato) {
-  event.stopPropagation();
-  closePSPopover();
-  const ps = getPuntosSuministro(nroContrato);
-  if (!ps.length) return;
-
-  // Overlay invisible para cerrar al click fuera
-  const overlay = document.createElement('div');
-  overlay.className = 'ps-popover-overlay';
-  overlay.id = 'psPopoverOverlay';
-  overlay.onclick = closePSPopover;
-  document.body.appendChild(overlay);
-
-  // Popover
-  const pop = document.createElement('div');
-  pop.className = 'ps-popover';
-  pop.id = 'psPopover';
-  pop.innerHTML = '<div class="ps-popover-title">Puntos de suministro — contrato ' + nroContrato + '</div>'
-    + '<div class="ps-popover-grid">' + ps.map(n => '<span class="ps-tag">'+n+'</span>').join('') + '</div>';
-
-  document.body.appendChild(pop);
-
-  // Posicionar cerca del click
-  const rect = event.target.getBoundingClientRect();
-  let top = rect.bottom + 6;
-  let left = rect.left;
-  if (left + 320 > window.innerWidth) left = window.innerWidth - 330;
-  if (top + 380 > window.innerHeight) top = rect.top - pop.offsetHeight - 6;
-  pop.style.top = top + 'px';
-  pop.style.left = left + 'px';
-}
-function closePSPopover() {
-  document.getElementById('psPopoverOverlay')?.remove();
-  document.getElementById('psPopover')?.remove();
 }
 
 function render(){
