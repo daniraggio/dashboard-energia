@@ -3,7 +3,7 @@
 <!--
 ================================================================================
 DASHBOARD DE CONTRATOS DE ENERGÍA — DOCUMENTACIÓN INTERNA (solo para Claude)
-Versión: 19
+Versión: 20
 Repositorio: daniraggio/dashboard-energia
 URL: https://daniraggio.github.io/dashboard-energia/
 ================================================================================
@@ -85,12 +85,14 @@ v18: [entregada como v18 por error — debió ser v19] Popover "+N más" en NEMO
      NEMO en demanda grupal; badge de versión en header; título columna "NEMOs Dem. Grupal"
 v19: Corrección bug popover (JSON en onclick roto por comillas → usa data-ps + encodeURIComponent);
      documentación interna actualizada con reglas de edición y numeración secuencial
+v20: Corrección bug crítico CSS — td{overflow:hidden} ocultaba los NEMOs; agregada clase ps-cell
+     con overflow:visible y white-space:normal para la columna NEMOs Dem. Grupal
 ================================================================================
 -->
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard — Contratos de Energía v19</title>
+<title>Dashboard — Contratos de Energía v20</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -155,6 +157,7 @@ v19: Corrección bug popover (JSON en onclick roto por comillas → usa data-ps 
   th .si{margin-left:3px;opacity:.35;font-style:normal;font-size:10px}
   th.sa .si::after{content:'↑';opacity:1} th.sd .si::after{content:'↓';opacity:1} th:not(.sa):not(.sd) .si::after{content:'↕'}
   td{padding:7px 11px;border-bottom:1px solid var(--border);font-size:12px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+  td.ps-cell{overflow:visible;white-space:normal;max-width:260px;vertical-align:top;padding-top:6px}
   tr:last-child td{border-bottom:none}
   tr:hover td{background:var(--surface2)}
   .mono{font-family:'IBM Plex Mono',monospace;font-size:11px}
@@ -261,7 +264,7 @@ v19: Corrección bug popover (JSON en onclick roto por comillas → usa data-ps 
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <span style="font-size:10px;font-family:'IBM Plex Mono',monospace;background:var(--blue-bg);color:var(--blue-text);padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.04em">v19</span>
+    <span style="font-size:10px;font-family:'IBM Plex Mono',monospace;background:var(--blue-bg);color:var(--blue-text);padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.04em">v20</span>
     <div class="header-date">Actualizado: 24/04/2026</div>
   </div>
 </header>
@@ -747,7 +750,7 @@ function renderPSCell(nroContrato, tipoContrato) {
   const esGrupal = tipo.includes('grupal');
   if (!esGrupal) return '<td></td>';
   const ps = getPuntosSuministro(nroContrato);
-  if (!ps.length) return '<td><span style="font-size:9px;color:var(--text3);font-style:italic">Sin datos</span></td>';
+  if (!ps.length) return '<td class="ps-cell"><span style="font-size:9px;color:var(--text3);font-style:italic">Sin datos</span></td>';
   const MAX_SHOW = 4;
   const tags = ps.slice(0, MAX_SHOW).map(n => '<span class="ps-tag">'+n+'</span>').join('');
   const moreCount = ps.length - MAX_SHOW;
@@ -756,7 +759,7 @@ function renderPSCell(nroContrato, tipoContrato) {
   const more = moreCount > 0
     ? '<span class="ps-more" data-ps="'+psEncoded+'" onclick="showPsPopoverFromEl(this);event.stopPropagation()">+' + moreCount + ' más</span>'
     : '';
-  return '<td><div class="ps-wrap">' + tags + more + '</div></td>';
+  return '<td class="ps-cell"><div class="ps-wrap">' + tags + more + '</div></td>';
 }
 
 function render(){
