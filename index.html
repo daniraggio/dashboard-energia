@@ -3,7 +3,7 @@
 <!--
 ================================================================================
 DASHBOARD DE CONTRATOS DE ENERGÍA — DOCUMENTACIÓN INTERNA (solo para Claude)
-Versión: 17
+Versión: 19
 Repositorio: daniraggio/dashboard-energia
 URL: https://daniraggio.github.io/dashboard-energia/
 ================================================================================
@@ -22,7 +22,8 @@ El propietario es "Daniraggio" (comercializador de energía).
 - `CUIT_NAMES{}`: Diccionario CUIT → Nombre del vendedor/generador
 - `SUMINISTROS_BY_CONTRACT{}`: Diccionario Nro contrato → [lista de NEMOs de suministros].
   Viene del archivo SUMINISTROS.xlsx (col Suministro tiene NEMOs entre paréntesis).
-  Solo se muestra en tabla para contratos de "demanda grupal".
+  Keys con ceros a la izquierda igual que 'Nro contrato' en ALL[] (ej: "002430").
+  Solo se muestra para contratos de "demanda grupal".
 - `contratos_nuevos.json`: Archivo en el repo GitHub donde se persisten contratos
   agregados desde Excel (se lee vía raw.githubusercontent.com, sin token).
 
@@ -37,25 +38,39 @@ El propietario es "Daniraggio" (comercializador de energía).
    Escritura requiere token (solo propietario). Lectura es pública.
 6. Filtro rápido: click en celda "Gran Usuario" o "Vendedor" filtra la tabla
 7. Columna GUMA/GUME: detectada automáticamente al cargar Excel nuevo
-8. Columna "Puntos de Suministro": para contratos de demanda grupal, muestra los NEMOs 
-   asociados según SUMINISTROS.xlsx. Se muestran los primeros 4 con badge azul, 
-   y "+N más" si hay más.
+8. Columna "NEMOs Dem. Grupal": para contratos de demanda grupal, muestra los NEMOs
+   asociados según SUMINISTROS.xlsx. Se muestran los primeros 4 con badge azul,
+   y "+N más" como botón clickeable que abre un popover con todos los NEMOs.
+   TÉCNICO: el onclick usa data-ps (URL-encoded JSON) para evitar conflictos con
+   comillas dobles en atributos HTML — NO pasar JSON directamente en onclick="".
 9. Inferencia TIPO RECURSO: cuando un contrato nuevo no tiene tipo, lo infiere por generador
+10. Búsqueda por NEMO en demanda grupal: el filtro de texto también busca dentro de los
+    NEMOs de SUMINISTROS_BY_CONTRACT para contratos de tipo grupal.
+11. Badge de versión: visible en el header (esquina superior derecha junto a la fecha).
 
 ## COLUMNAS TABLA PRINCIPAL (en orden)
 Nro contrato | Gran Usuario | Vendedor | Conj. Generador | Tipo | Inicio | Fin | 
-Precio | Volumen | Tipo contrato | [fecha agregado si aplica] | Puntos de Suministro
+Precio | Volumen | Tipo contrato | [fecha agregado si aplica] | NEMOs Dem. Grupal
 
-## TIPOS DE CONTRATO con Puntos de Suministro (demanda grupal)
+## TIPOS DE CONTRATO con NEMOs Dem. Grupal
 - "Con demanda grupal"
 - "Con demanda grupal desde acuerdo"
-(Los demás tipos: "Un solo agente", "Un solo agente desde acuerdo", "Distribuidor" → no muestran PS)
+(Los demás tipos: "Un solo agente", "Un solo agente desde acuerdo", "Distribuidor" → vacío)
 
 ## GITHUB PERSISTENCE
 - Repo: daniraggio/dashboard-energia (público)
 - Archivo datos: contratos_nuevos.json en la raíz
 - Token: guardado en localStorage del browser del propietario (clave: 'gh_dashboard_token')
 - Token revocado el: [pendiente - fue expuesto en chat, debe renovarse]
+
+## REGLAS PARA CLAUDE AL EDITAR ESTE ARCHIVO
+1. VERSIÓN: siempre incrementar el número de versión en: este comentario ("Versión: N"),
+   el <title>, el badge del header (v19), y el historial de versiones al final.
+   La numeración es estrictamente secuencial — nunca saltear ni repetir versiones.
+2. DOCUMENTACIÓN: siempre actualizar este instructivo al agregar/modificar funcionalidades.
+   Actualizar: FUNCIONALIDADES, COLUMNAS, TIPOS DE CONTRATO, y HISTORIAL DE VERSIONES.
+3. TÉCNICO: evitar JSON con comillas dobles dentro de atributos onclick="". Usar
+   data-attributes con encodeURIComponent/decodeURIComponent como patrón seguro.
 
 ## HISTORIAL DE VERSIONES
 v1-v10: Versiones iniciales del dashboard (antes del historial detallado)
@@ -64,14 +79,18 @@ v12: Carga de Excel + detección de contratos nuevos
 v13: Persistencia GitHub (contratos_nuevos.json)
 v14: Lectura pública sin token para visitantes
 v15: Renombrar "Suministro" → "Gran Usuario"; columna GUMA/GUME; celdas clickeables; inferencia tipo recurso
-v16: [misma sesión que v15, entregada como versión de corrección de bugs]
-v18: Tooltip "+N más" en Puntos de Suministro; filtro por NEMO en demanda grupal; badge de versión en header
+v16: Corrección de bugs de v15
+v17: Columna "Puntos de Suministro" (desde SUMINISTROS.xlsx); documentación interna
+v18: [entregada como v18 por error — debió ser v19] Popover "+N más" en NEMOs; filtro por
+     NEMO en demanda grupal; badge de versión en header; título columna "NEMOs Dem. Grupal"
+v19: Corrección bug popover (JSON en onclick roto por comillas → usa data-ps + encodeURIComponent);
+     documentación interna actualizada con reglas de edición y numeración secuencial
 ================================================================================
 -->
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard — Contratos de Energía v18</title>
+<title>Dashboard — Contratos de Energía v19</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -242,7 +261,7 @@ v18: Tooltip "+N más" en Puntos de Suministro; filtro por NEMO en demanda grupa
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
-    <span style="font-size:10px;font-family:'IBM Plex Mono',monospace;background:var(--blue-bg);color:var(--blue-text);padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.04em">v18</span>
+    <span style="font-size:10px;font-family:'IBM Plex Mono',monospace;background:var(--blue-bg);color:var(--blue-text);padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.04em">v19</span>
     <div class="header-date">Actualizado: 24/04/2026</div>
   </div>
 </header>
@@ -718,6 +737,11 @@ document.addEventListener('click', function(e) {
   }
 });
 
+function showPsPopoverFromEl(el) {
+  const ps = JSON.parse(decodeURIComponent(el.dataset.ps || '[]'));
+  showPsPopover(el, ps);
+}
+
 function renderPSCell(nroContrato, tipoContrato) {
   const tipo = (tipoContrato || '').toLowerCase();
   const esGrupal = tipo.includes('grupal');
@@ -727,9 +751,10 @@ function renderPSCell(nroContrato, tipoContrato) {
   const MAX_SHOW = 4;
   const tags = ps.slice(0, MAX_SHOW).map(n => '<span class="ps-tag">'+n+'</span>').join('');
   const moreCount = ps.length - MAX_SHOW;
-  const psJson = JSON.stringify(ps).replace(/'/g, '&#39;');
+  // Store NEMOs in a data attribute to avoid quote escaping issues in onclick
+  const psEncoded = encodeURIComponent(JSON.stringify(ps));
   const more = moreCount > 0
-    ? '<span class="ps-more" onclick="showPsPopover(this,' + psJson + ');event.stopPropagation()">+' + moreCount + ' más</span>'
+    ? '<span class="ps-more" data-ps="'+psEncoded+'" onclick="showPsPopoverFromEl(this);event.stopPropagation()">+' + moreCount + ' más</span>'
     : '';
   return '<td><div class="ps-wrap">' + tags + more + '</div></td>';
 }
