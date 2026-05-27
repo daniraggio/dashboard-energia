@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Contratos de Energía</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#f4f3ef;--surface:#fff;--surface2:#f9f8f5;
+    --border:#e2e0d8;--border2:#ccc9be;
+    --text:#1a1916;--text2:#6b6860;--text3:#9c9a93;
+    --blue:#2155a3;--blue-bg:#edf2fc;--blue-text:#1a4282;
+    --amber:#b06a10;--amber-bg:#fdf3e3;--amber-text:#8a5008;
+    --green:#276940;--green-bg:#e8f5ee;--green-text:#1d5131;
+    --red:#b52a2a;--red-bg:#fdeaea;--gray-bg:#eceae3;
+    --radius:8px;--radius-lg:12px;
+  }
+  body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+  .header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .header-left{display:flex;align-items:center;gap:12px}
+  .header-icon{width:34px;height:34px;border-radius:var(--radius);background:var(--blue);display:flex;align-items:center;justify-content:center}
+  .header-icon svg{width:17px;height:17px;fill:white}
+  .header-title{font-size:15px;font-weight:600;letter-spacing:-.02em}
+  .header-sub{font-size:11px;color:var(--text2);margin-top:1px}
+  .header-date{font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace}
+  .main{max-width:1360px;margin:0 auto;padding:24px 28px}
+  .section-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;padding-top:4px}
+  .kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:22px}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 13px}
+  .kpi-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+  .kpi-value{font-size:24px;font-weight:300;letter-spacing:-.03em;font-family:'IBM Plex Mono',monospace}
+  .kpi-value.c-blue{color:var(--blue)} .kpi-value.c-green{color:var(--green)} .kpi-value.c-amber{color:var(--amber)} .kpi-value.c-red{color:var(--red)} .kpi-value.c-purple{color:#6a3db5}
+  .kpi-sub{font-size:11px;color:var(--text3);margin-top:3px}
+  .charts-row{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-bottom:12px}
+  .charts-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;position:relative}
+  .chart-title{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text2);margin-bottom:3px}
+  .chart-subtitle{font-size:11px;color:var(--text3);margin-bottom:14px}
+  .chart-badge{position:absolute;top:14px;right:14px;font-size:10px;background:var(--blue-bg);color:var(--blue-text);padding:2px 7px;border-radius:20px;font-weight:600;opacity:0;transition:opacity .2s}
+  .chart-badge.visible{opacity:1}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+  .legend-swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+  .donut-wrap{display:flex;align-items:center;gap:20px}
+  .table-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+  .table-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .table-title{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text2)}
+  .count-badge{font-size:11px;font-family:'IBM Plex Mono',monospace;background:var(--gray-bg);color:var(--text2);padding:2px 8px;border-radius:20px;transition:background .2s,color .2s}
+  .count-badge.filtered{background:var(--blue-bg);color:var(--blue-text)}
+  .filter-grid{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:8px;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--surface2);align-items:end}
+  .fgroup{display:flex;flex-direction:column;gap:3px}
+  .fgroup label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
+  .fgroup select,.fgroup input{font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;outline:none;width:100%;transition:border-color .12s}
+  .fgroup select:focus,.fgroup input:focus{border-color:var(--blue)}
+  .fgroup.span2{grid-column:span 2}
+  .date-pair{display:flex;gap:6px;align-items:center}
+  .date-pair span{font-size:11px;color:var(--text3);flex-shrink:0}
+  .btn-clear{font-family:'IBM Plex Sans',sans-serif;font-size:11px;padding:5px 12px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text2);cursor:pointer;white-space:nowrap;transition:background .12s,color .12s;align-self:end}
+  .btn-clear:hover{background:var(--red-bg);color:var(--red);border-color:var(--red)}
+  .table-scroll{overflow-x:auto;max-height:640px;overflow-y:auto}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);padding:9px 11px;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2;white-space:nowrap;cursor:pointer;user-select:none}
+  th:hover{color:var(--text2)}
+  th .si{margin-left:3px;opacity:.35;font-style:normal;font-size:10px}
+  th.sa .si::after{content:'↑';opacity:1} th.sd .si::after{content:'↓';opacity:1} th:not(.sa):not(.sd) .si::after{content:'↕'}
+  td{padding:7px 11px;border-bottom:1px solid var(--border);font-size:12px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--surface2)}
+  .mono{font-family:'IBM Plex Mono',monospace;font-size:11px}
+  .tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;letter-spacing:.02em}
+  .tag-r{background:var(--green-bg);color:var(--green-text)}
+  .tag-nr{background:var(--amber-bg);color:var(--amber-text)}
+  .tag-na{background:var(--gray-bg);color:var(--text3)}
+  .vol-bar-wrap{display:flex;align-items:center;gap:6px;min-width:110px}
+  .vol-bar{height:5px;border-radius:3px;background:var(--blue);opacity:.55;flex-shrink:0}
+  .vol-txt{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);white-space:nowrap}
+  .paginator{padding:10px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)}
+  .pag-btn{font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;transition:background .1s}
+  .pag-btn:hover:not(:disabled){background:var(--surface2)}
+  .pag-btn:disabled{opacity:.35;cursor:default}
+  .pag-info{font-family:'IBM Plex Mono',monospace;font-size:11px}
+  .pag-total{margin-left:auto;color:var(--text3);font-size:11px}
+  @media(max-width:1100px){
+    .kpi-row{grid-template-columns:repeat(3,1fr)}
+    .charts-row,.charts-row-2{grid-template-columns:1fr}
+    .filter-grid{grid-template-columns:1fr 1fr}
+    .main{padding:14px}
+  }
+
+  /* ── Nuevos Contratos ─────────────────────────────── */
+  .upload-panel{background:var(--surface);border:2px dashed var(--border2);border-radius:var(--radius-lg);padding:20px 24px;margin-bottom:22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;transition:border-color .2s,background .2s}
+  .upload-panel.drag-over{border-color:var(--blue);background:var(--blue-bg)}
+  .upload-panel.has-files{border-style:solid;border-color:var(--green);background:var(--green-bg)}
+  .upload-icon{width:40px;height:40px;flex-shrink:0;background:var(--gray-bg);border-radius:var(--radius);display:flex;align-items:center;justify-content:center}
+  .upload-icon svg{width:20px;height:20px;fill:var(--text2)}
+  .upload-text{flex:1}
+  .upload-text strong{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+  .upload-text span{font-size:11px;color:var(--text3)}
+  .upload-btn{font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:6px 14px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;transition:background .12s,color .12s,border-color .12s;white-space:nowrap}
+  .upload-btn:hover{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue)}
+  .upload-files-list{width:100%;margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+  .file-chip{font-size:11px;font-family:'IBM Plex Mono',monospace;background:var(--green-bg);color:var(--green-text);padding:3px 8px;border-radius:20px;display:flex;align-items:center;gap:4px}
+  .file-chip button{background:none;border:none;cursor:pointer;color:inherit;font-size:13px;line-height:1;padding:0;margin-left:2px;opacity:.6}
+  .file-chip button:hover{opacity:1}
+  .new-filter-grid{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--surface2);align-items:end}
+  .tag-new{background:#f0e6ff;color:#5c2d9c;display:inline-block;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;letter-spacing:.02em}
+  .new-contracts-kpi{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2)}
+  .new-contracts-kpi strong{font-size:20px;font-weight:300;font-family:'IBM Plex Mono',monospace;color:#5c2d9c}
+  .empty-new{padding:40px;text-align:center;color:var(--text3);font-size:13px}
+  .empty-new svg{width:32px;height:32px;fill:var(--border2);margin:0 auto 8px;display:block}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-left">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24"><path d="M13 2.05v2.02c3.95.49 7 3.85 7 7.93 0 3.21-1.81 6-4.5 7.54L13 17v5h5l-1.22-1.22C19.91 19.07 22 15.76 22 12c0-5.18-3.95-9.45-9-9.95zM11 2.05C5.95 2.55 2 6.82 2 12c0 3.76 2.09 7.07 5.22 8.78L6 22h5v-5l-2.5 2.47C6.81 18 5 15.21 5 12c0-4.08 3.05-7.44 7-7.93V2.05z"/></svg>
+    </div>
+    <div>
+      <div class="header-title">Contratos de Energía</div>
+      <div class="header-sub">Análisis unificado · 5 fuentes de datos</div>
+    </div>
+  </div>
+  <div class="header-date">Actualizado: 24/04/2026</div>
+</header>
+<main class="main">
+<div id="loadingOverlay" style="position:fixed;inset:0;background:rgba(244,243,239,.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:'IBM Plex Sans',sans-serif">
+  <div style="width:44px;height:44px;border:3px solid #e2e0d8;border-top-color:#2155a3;border-radius:50%;animation:spin .8s linear infinite"></div>
+  <div style="font-size:14px;color:#6b6860" id="loadingMsg">Cargando datos desde GitHub...</div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+</div>
+
+<div class="section-label">Métricas generales</div>
+<div class="kpi-row">
+  <div class="kpi-card"><div class="kpi-label">Total contratos</div><div class="kpi-value">2.300</div><div class="kpi-sub">todos los registros</div></div>
+  <div class="kpi-card"><div class="kpi-label">Selección</div><div class="kpi-value c-blue" id="kpiVigVal">1.924</div><div class="kpi-sub" id="kpiVigSub">contratos vigentes</div></div>
+  <div class="kpi-card"><div class="kpi-label">Renovables</div><div class="kpi-value c-green" id="kpiRenVal">1.585</div><div class="kpi-sub" id="kpiRenSub">69% del total</div></div>
+  <div class="kpi-card"><div class="kpi-label">Precio mediano</div><div class="kpi-value c-amber" id="kpiPrecioVal">60,5</div><div class="kpi-sub">U$S / MWh</div></div>
+  <div class="kpi-card"><div class="kpi-label">Vol. anual total</div><div class="kpi-value c-purple" id="kpiVolVal">—</div><div class="kpi-sub">MWh de la selección</div></div>
+  <div class="kpi-card"><div class="kpi-label">Vencen en 12 m.</div><div class="kpi-value c-red">692</div><div class="kpi-sub">próximo año</div></div>
+</div>
+<div class="section-label">Análisis · <span id="chartNote" style="font-weight:400;color:var(--text2)">mostrando todos los contratos vigentes</span></div>
+<div class="charts-row">
+  <div class="chart-card">
+    <div class="chart-title" id="chartAnioTitle">Vencimientos por año</div>
+    <div class="chart-subtitle" id="chartAnioSubtitle">Cantidad según año de fin, por tipo de recurso</div>
+    <span class="chart-badge" id="badgeAnio">filtrado</span>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-swatch" style="background:#2155a3"></span>Renovable</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#b06a10"></span>No renovable</div>
+    </div>
+    <div style="position:relative;width:100%;height:210px"><canvas id="chartAnio" style="cursor:default"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Distribución de precios</div>
+    <div class="chart-subtitle">Contratos con precio por rango (U$S/MWh)</div>
+    <span class="chart-badge" id="badgePrecio">filtrado</span>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-swatch" style="background:#2155a3"></span>Renovable</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#b06a10"></span>No renovable</div>
+    </div>
+    <div style="position:relative;width:100%;height:210px"><canvas id="chartPrecios"></canvas></div>
+  </div>
+</div>
+<div class="charts-row-2">
+  <div class="chart-card">
+    <div class="chart-title">Composición por tipo</div>
+    <div class="chart-subtitle">Proporción según tipo de recurso</div>
+    <span class="chart-badge" id="badgeDonut">filtrado</span>
+    <div class="donut-wrap" style="margin-top:10px">
+      <div style="position:relative;width:140px;height:140px;flex-shrink:0"><canvas id="chartDonut"></canvas></div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+        <div><div class="legend-item" style="margin-bottom:2px"><span class="legend-swatch" style="background:#2155a3"></span><strong>Renovable</strong></div><div style="font-size:20px;font-weight:300;font-family:'IBM Plex Mono',monospace;margin-left:15px"><span id="ds-r">1.585</span> <span style="font-size:12px;color:var(--text3)" id="ds-rp">69%</span></div></div>
+        <div><div class="legend-item" style="margin-bottom:2px"><span class="legend-swatch" style="background:#b06a10"></span><strong>No renovable</strong></div><div style="font-size:20px;font-weight:300;font-family:'IBM Plex Mono',monospace;margin-left:15px"><span id="ds-nr">652</span> <span style="font-size:12px;color:var(--text3)" id="ds-nrp">28%</span></div></div>
+        <div><div class="legend-item" style="margin-bottom:2px"><span class="legend-swatch" style="background:#ccc9be"></span><strong>Sin datos</strong></div><div style="font-size:20px;font-weight:300;font-family:'IBM Plex Mono',monospace;margin-left:15px"><span id="ds-na">63</span> <span style="font-size:12px;color:var(--text3)" id="ds-nap">3%</span></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Top vendedores</div>
+    <div class="chart-subtitle">Por cantidad de contratos en la selección actual</div>
+    <span class="chart-badge" id="badgeVend">filtrado</span>
+    <div style="position:relative;width:100%;height:200px;margin-top:10px"><canvas id="chartVendedores"></canvas></div>
+  </div>
+</div>
+<div class="section-label">Detalle de contratos vigentes</div>
+<div class="table-section">
+  <div class="table-header">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="table-title">Contratos vigentes</div>
+      <span class="count-badge" id="badgeCount">1924 contratos</span>
+    </div>
+    <button onclick="exportExcel()" style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 14px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .12s,color .12s" onmouseover="this.style.background='var(--green-bg)';this.style.color='var(--green-text)';this.style.borderColor='var(--green)'" onmouseout="this.style.background='var(--surface)';this.style.color='var(--text2)';this.style.borderColor='var(--border2)'">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      Exportar a Excel
+    </button>
+  </div>
+  <div class="filter-grid">
+    <div class="fgroup span2"><label>Buscar texto</label><input type="text" id="fSearch" placeholder="Nro contrato, suministro, generador…"></div>
+    <div class="fgroup"><label>Tipo recurso</label><select id="fTipo"><option value="">Todos</option><option>Renovable</option><option>No Renovable</option></select></div>
+    <div class="fgroup"><label>Precio (U$S/MWh)</label><select id="fPrecio"><option value="">Todos</option><option value="0-30">Menos de 30</option><option value="30-50">30 – 50</option><option value="50-60">50 – 60</option><option value="60-70">60 – 70</option><option value="70-80">70 – 80</option><option value="80-9999">Más de 80</option><option value="null">Sin precio</option></select></div>
+    <button class="btn-clear" onclick="clearFilters()" style="grid-row:span 2">Limpiar filtros</button>
+    <div class="fgroup"><label>Vendedor</label><select id="fVendedor"><option value="">Todos</option><option value="30-51688824-1">P.Eol. Vientos Olavarría (30-51688824-1)</option><option value="30-52278060-6">P.Eol. Aluar I (30-52278060-6)</option><option value="30-52655265-9">Pampa Energía (30-52655265-9)</option><option value="30-52671272-9">LDC Argentina (30-52671272-9)</option><option value="30-53378967-2">Genneia (30-53378967-2)</option><option value="30-55081599-7">Eol. Buena Ventura (30-55081599-7)</option><option value="30-62971795-8">Helios Santa Rosa 2 (30-62971795-8)</option><option value="30-62982706-0">Agua del Cajón (30-62982706-0)</option><option value="30-65225424-8">Costanera (30-65225424-8)</option><option value="30-65599219-3">Dock Sud (30-65599219-3)</option><option value="30-66346111-3">AES Paraná (30-66346111-3)</option><option value="30-66523411-4">Genneia (30-66523411-4)</option><option value="30-67642119-6">Hid. Los Nihuiles (30-67642119-6)</option><option value="30-69224359-1">Termoandes (30-69224359-1)</option><option value="30-69470158-9">Potrerillos (30-69470158-9)</option><option value="30-70050075-2">Solar de Los Llanos (30-70050075-2)</option><option value="30-70083497-9">Pampa Energía CC (30-70083497-9)</option><option value="30-70882520-0">Solar Anchipurac (30-70882520-0)</option><option value="30-70969733-8">Vientos Neuquinos I (30-70969733-8)</option><option value="30-70982458-5">Solar Victorica (30-70982458-5)</option><option value="30-70983613-3">Eol. Diadema 1 (30-70983613-3)</option><option value="30-71120405-5">FV C.Honda + La Rioja (30-71120405-5)</option><option value="30-71132206-6">Genneia (30-71132206-6)</option><option value="30-71158444-3">Pampa Energía (30-71158444-3)</option><option value="30-71242276-5">Eol. Bicentenario 2 (30-71242276-5)</option><option value="30-71312200-5">Vientos Neuquinos I (30-71312200-5)</option><option value="30-71412830-9">YPF Energía Eléctrica (30-71412830-9)</option><option value="30-71415512-8">P.S. Pampa del Infierno (30-71415512-8)</option><option value="30-71474937-0">PS V. María del Río Seco (30-71474937-0)</option><option value="30-71518744-9">Eol. La Energética (30-71518744-9)</option><option value="30-71526384-6">PS Cura Brochero Ampl. (30-71526384-6)</option><option value="30-71534545-1">Raizen (30-71534545-1)</option><option value="30-71536578-9">PS Amanecer IV (30-71536578-9)</option><option value="30-71539912-8">Eol. 3 Picos (30-71539912-8)</option><option value="30-71556280-0">Vientos Olavarría (30-71556280-0)</option><option value="30-71556281-9">Genoveva+Manq+Ol (30-71556281-9)</option><option value="30-71559121-5">Solar Villa Ángela 1 (30-71559121-5)</option><option value="30-71572949-7">Solar P. Los Llanos (30-71572949-7)</option><option value="30-71592816-3">PE San Luis Norte (30-71592816-3)</option><option value="30-71595899-2">FV La Cumbre 2 (30-71595899-2)</option><option value="30-71609599-8">Eol. La Rinconada (30-71609599-8)</option><option value="30-71609845-8">FV La Cumbre 2 (30-71609845-8)</option><option value="30-71610373-7">PS Cura Brochero (30-71610373-7)</option><option value="30-71610419-9">PS V. María del Río Seco M. (30-71610419-9)</option><option value="30-71617892-3">Eol. Cañadón León (30-71617892-3)</option><option value="30-71644849-1">Genneia (30-71644849-1)</option><option value="30-71729321-1">PS La Salvación (30-71729321-1)</option><option value="30-71765521-0">Solar El Quemado (30-71765521-0)</option><option value="30-71853263-5">Genneia (30-71853263-5)</option><option value="30-71868101-0">Hid. El Chocón (30-71868101-0)</option><option value="30-71868196-7">Hid. Alicurá (30-71868196-7)</option><option value="30-71869033-8">Hid. Cerros Colorados (30-71869033-8)</option><option value="30-71870493-2">Hid. Piedra del Águila (30-71870493-2)</option><option value="30-71872506-9">Solar La Perla (30-71872506-9)</option><option value="30-71882580-2">Solar El Quemado (30-71882580-2)</option><option value="30-71918704-4">Hid. Las Maderas (30-71918704-4)</option><option value="30-99902748-9">EPEC (30-99902748-9)</option><option value="33-61597477-9">Céspedes (33-61597477-9)</option><option value="33-65030549-9">Central Puerto (33-65030549-9)</option><option value="33-68735847-9">Hid. Reyes (33-68735847-9)</option><option value="33-70726132-9">Solar Villa Ángela 1 (33-70726132-9)</option><option value="33-71194489-9">Roca (33-71194489-9)</option><option value="33-71869886-9">Genneia (33-71869886-9)</option></select></div>
+    <div class="fgroup"><label>Generador</label><select id="fGenerador"><option value="">Todos</option><option value="360 FV4">360 FV4</option><option value="3PICOS">3PICOS</option><option value="ACAJMT">ACAJMT</option><option value="AESPARA2">AESPARA2</option><option value="ALGARRO">ALGARRO</option><option value="ALUEO">ALUEO</option><option value="AMANECER">AMANECER</option><option value="ANCHI">ANCHI</option><option value="ANDERSE1">ANDERSE1</option><option value="BEHR">BEHR</option><option value="BICE2">BICE2</option><option value="BROCH.AM">BROCH.AM</option><option value="BROCHERO">BROCHERO</option><option value="BVENTURA">BVENTURA</option><option value="CARACOLE">CARACOLE</option><option value="CESPEDES">CESPEDES</option><option value="CHEPES">CHEPES</option><option value="CIPO">CIPO</option><option value="COSTANE1">COSTANE1</option><option value="CPUERTO">CPUERTO</option><option value="DIADEMA1">DIADEMA1</option><option value="DIAGUV1">DIAGUV1</option><option value="DOCKSUD">DOCKSUD</option><option value="ENE1MAT">ENE1MAT</option><option value="EPEC MAT">EPEC MAT</option><option value="GENNEI10">GENNEI10</option><option value="GENNEIA8">GENNEIA8</option><option value="GENNEIA9">GENNEIA9</option><option value="GENOVEV3">GENOVEV3</option><option value="GENOVEV4">GENOVEV4</option><option value="HALICURA">HALICURA</option><option value="HCERRO">HCERRO</option><option value="HCHOCON">HCHOCON</option><option value="HELIO2">HELIO2</option><option value="HINISA">HINISA</option><option value="HPAGUI">HPAGUI</option><option value="HREYES">HREYES</option><option value="LACU2">LACU2</option><option value="LASLOMAS">LASLOMAS</option><option value="LDC">LDC</option><option value="LEO1CAEO">LEO1CAEO</option><option value="LEVALLE2">LEVALLE2</option><option value="LLAPSF">LLAPSF</option><option value="MADERAS">MADERAS</option><option value="NEUQEO">NEUQEO</option><option value="OLAVAEO">OLAVAEO</option><option value="PAGUI">PAGUI</option><option value="PAMPA">PAMPA</option><option value="PAMPAEO4">PAMPAEO4</option><option value="PERLA">PERLA</option><option value="PESLUIS">PESLUIS</option><option value="PINFIER">PINFIER</option><option value="POTRERIL">POTRERIL</option><option value="PTANEGRA">PTANEGRA</option><option value="QUEMADO">QUEMADO</option><option value="QULLUM">QULLUM</option><option value="RAIZEN2">RAIZEN2</option><option value="RAWSON 3">RAWSON 3</option><option value="RINCONAD">RINCONAD</option><option value="ROCA TG">ROCA TG</option><option value="ROMERO">ROMERO</option><option value="SALTOLOM">SALTOLOM</option><option value="SALVA 2">SALVA 2</option><option value="SANDFV">SANDFV</option><option value="SANMIGUE">SANMIGUE</option><option value="SIDERAR">SIDERAR</option><option value="TERMOAND">TERMOAND</option><option value="TEROEOL">TEROEOL</option><option value="TUCUMAN">TUCUMAN</option><option value="VANGELA1">VANGELA1</option><option value="VANGELA5">VANGELA5</option><option value="VICTORIC">VICTORIC</option><option value="VM RIO">VM RIO</option><option value="VMARIARS">VMARIARS</option><option value="YPFLUZ">YPFLUZ</option><option value="YPFLUZ1">YPFLUZ1</option><option value="ZONDA">ZONDA</option></select></div>
+    <div class="fgroup"><label>Tipo contrato</label><select id="fTipoContrato"><option value="">Todos</option><option value="Con demanda grupal">Con demanda grupal</option><option value="Con demanda grupal desde acuerdo">Con demanda grupal desde acuerdo</option><option value="Distribuidor">Distribuidor</option><option value="Un solo agente">Un solo agente</option><option value="Un solo agente desde acuerdo">Un solo agente desde acuerdo</option></select></div>
+    <div class="fgroup"><label>Volumen anual</label><select id="fVol"><option value="">Todos</option><option value="0-1000">Hasta 1.000 MWh</option><option value="1000-10000">1.000 – 10.000 MWh</option><option value="10000-100000">10.000 – 100.000 MWh</option><option value="100000-999999999">Más de 100.000 MWh</option><option value="null">Sin datos</option></select></div>
+    <div class="fgroup span2"><label>Inicio — desde / hasta</label><div class="date-pair"><select id="fIniDesde" style="flex:1"><option value="">Cualquier inicio</option><option value="2018-02">Feb 2018</option><option value="2019-02">Feb 2019</option><option value="2019-04">Abr 2019</option><option value="2019-05">May 2019</option><option value="2019-08">Ago 2019</option><option value="2019-09">Sep 2019</option><option value="2019-11">Nov 2019</option><option value="2020-01">Ene 2020</option><option value="2020-02">Feb 2020</option><option value="2020-05">May 2020</option><option value="2020-06">Jun 2020</option><option value="2020-08">Ago 2020</option><option value="2020-10">Oct 2020</option><option value="2020-11">Nov 2020</option><option value="2021-02">Feb 2021</option><option value="2021-05">May 2021</option><option value="2021-07">Jul 2021</option><option value="2021-08">Ago 2021</option><option value="2021-11">Nov 2021</option><option value="2021-12">Dic 2021</option><option value="2022-02">Feb 2022</option><option value="2022-03">Mar 2022</option><option value="2022-05">May 2022</option><option value="2022-09">Sep 2022</option><option value="2022-11">Nov 2022</option><option value="2023-01">Ene 2023</option><option value="2023-02">Feb 2023</option><option value="2023-03">Mar 2023</option><option value="2023-04">Abr 2023</option><option value="2023-05">May 2023</option><option value="2023-06">Jun 2023</option><option value="2023-08">Ago 2023</option><option value="2023-09">Sep 2023</option><option value="2023-10">Oct 2023</option><option value="2023-11">Nov 2023</option><option value="2023-12">Dic 2023</option><option value="2024-01">Ene 2024</option><option value="2024-02">Feb 2024</option><option value="2024-03">Mar 2024</option><option value="2024-04">Abr 2024</option><option value="2024-05">May 2024</option><option value="2024-07">Jul 2024</option><option value="2024-08">Ago 2024</option><option value="2024-09">Sep 2024</option><option value="2024-10">Oct 2024</option><option value="2024-11">Nov 2024</option><option value="2025-01">Ene 2025</option><option value="2025-02">Feb 2025</option><option value="2025-03">Mar 2025</option><option value="2025-04">Abr 2025</option><option value="2025-05">May 2025</option><option value="2025-06">Jun 2025</option><option value="2025-08">Ago 2025</option><option value="2025-09">Sep 2025</option><option value="2025-11">Nov 2025</option><option value="2025-12">Dic 2025</option><option value="2026-01">Ene 2026</option><option value="2026-02">Feb 2026</option><option value="2026-03">Mar 2026</option><option value="2026-04">Abr 2026</option><option value="2026-05">May 2026</option></select><span>→</span><select id="fIniHasta" style="flex:1"><option value="">—</option><option value="2018-02">Feb 2018</option><option value="2019-02">Feb 2019</option><option value="2019-04">Abr 2019</option><option value="2019-05">May 2019</option><option value="2019-08">Ago 2019</option><option value="2019-09">Sep 2019</option><option value="2019-11">Nov 2019</option><option value="2020-01">Ene 2020</option><option value="2020-02">Feb 2020</option><option value="2020-05">May 2020</option><option value="2020-06">Jun 2020</option><option value="2020-08">Ago 2020</option><option value="2020-10">Oct 2020</option><option value="2020-11">Nov 2020</option><option value="2021-02">Feb 2021</option><option value="2021-05">May 2021</option><option value="2021-07">Jul 2021</option><option value="2021-08">Ago 2021</option><option value="2021-11">Nov 2021</option><option value="2021-12">Dic 2021</option><option value="2022-02">Feb 2022</option><option value="2022-03">Mar 2022</option><option value="2022-05">May 2022</option><option value="2022-09">Sep 2022</option><option value="2022-11">Nov 2022</option><option value="2023-01">Ene 2023</option><option value="2023-02">Feb 2023</option><option value="2023-03">Mar 2023</option><option value="2023-04">Abr 2023</option><option value="2023-05">May 2023</option><option value="2023-06">Jun 2023</option><option value="2023-08">Ago 2023</option><option value="2023-09">Sep 2023</option><option value="2023-10">Oct 2023</option><option value="2023-11">Nov 2023</option><option value="2023-12">Dic 2023</option><option value="2024-01">Ene 2024</option><option value="2024-02">Feb 2024</option><option value="2024-03">Mar 2024</option><option value="2024-04">Abr 2024</option><option value="2024-05">May 2024</option><option value="2024-07">Jul 2024</option><option value="2024-08">Ago 2024</option><option value="2024-09">Sep 2024</option><option value="2024-10">Oct 2024</option><option value="2024-11">Nov 2024</option><option value="2025-01">Ene 2025</option><option value="2025-02">Feb 2025</option><option value="2025-03">Mar 2025</option><option value="2025-04">Abr 2025</option><option value="2025-05">May 2025</option><option value="2025-06">Jun 2025</option><option value="2025-08">Ago 2025</option><option value="2025-09">Sep 2025</option><option value="2025-11">Nov 2025</option><option value="2025-12">Dic 2025</option><option value="2026-01">Ene 2026</option><option value="2026-02">Feb 2026</option><option value="2026-03">Mar 2026</option><option value="2026-04">Abr 2026</option><option value="2026-05">May 2026</option></select></div></div>
+    <div class="fgroup span2"><label>Fin — desde / hasta</label><div class="date-pair"><select id="fFinDesde" style="flex:1"><option value="">Cualquier fin</option><option value="2026-04">Abr 2026</option><option value="2026-06">Jun 2026</option><option value="2026-07">Jul 2026</option><option value="2026-08">Ago 2026</option><option value="2026-09">Sep 2026</option><option value="2026-10">Oct 2026</option><option value="2026-11">Nov 2026</option><option value="2026-12">Dic 2026</option><option value="2027-01">Ene 2027</option><option value="2027-02">Feb 2027</option><option value="2027-03">Mar 2027</option><option value="2027-04">Abr 2027</option><option value="2027-05">May 2027</option><option value="2027-07">Jul 2027</option><option value="2027-10">Oct 2027</option><option value="2027-11">Nov 2027</option><option value="2027-12">Dic 2027</option><option value="2028-01">Ene 2028</option><option value="2028-02">Feb 2028</option><option value="2028-03">Mar 2028</option><option value="2028-04">Abr 2028</option><option value="2028-05">May 2028</option><option value="2028-07">Jul 2028</option><option value="2028-08">Ago 2028</option><option value="2028-10">Oct 2028</option><option value="2029-01">Ene 2029</option><option value="2029-03">Mar 2029</option><option value="2029-04">Abr 2029</option><option value="2029-06">Jun 2029</option><option value="2029-07">Jul 2029</option><option value="2029-08">Ago 2029</option><option value="2029-09">Sep 2029</option><option value="2029-10">Oct 2029</option><option value="2029-11">Nov 2029</option><option value="2029-12">Dic 2029</option><option value="2030-01">Ene 2030</option><option value="2030-03">Mar 2030</option><option value="2030-04">Abr 2030</option><option value="2030-05">May 2030</option><option value="2030-07">Jul 2030</option><option value="2030-08">Ago 2030</option><option value="2030-10">Oct 2030</option><option value="2030-11">Nov 2030</option><option value="2031-01">Ene 2031</option><option value="2031-02">Feb 2031</option><option value="2031-03">Mar 2031</option><option value="2031-04">Abr 2031</option><option value="2031-07">Jul 2031</option><option value="2031-10">Oct 2031</option><option value="2032-01">Ene 2032</option><option value="2032-04">Abr 2032</option><option value="2032-05">May 2032</option><option value="2032-07">Jul 2032</option><option value="2032-08">Ago 2032</option><option value="2032-10">Oct 2032</option><option value="2033-01">Ene 2033</option><option value="2033-02">Feb 2033</option><option value="2033-03">Mar 2033</option><option value="2033-04">Abr 2033</option><option value="2033-10">Oct 2033</option><option value="2033-12">Dic 2033</option><option value="2034-01">Ene 2034</option><option value="2034-02">Feb 2034</option><option value="2034-04">Abr 2034</option><option value="2034-05">May 2034</option><option value="2034-06">Jun 2034</option><option value="2034-07">Jul 2034</option><option value="2034-08">Ago 2034</option><option value="2034-10">Oct 2034</option><option value="2034-12">Dic 2034</option><option value="2035-01">Ene 2035</option><option value="2035-02">Feb 2035</option><option value="2035-03">Mar 2035</option><option value="2035-04">Abr 2035</option><option value="2035-05">May 2035</option><option value="2035-08">Ago 2035</option><option value="2035-10">Oct 2035</option><option value="2035-11">Nov 2035</option><option value="2036-01">Ene 2036</option><option value="2036-04">Abr 2036</option><option value="2036-11">Nov 2036</option><option value="2038-01">Ene 2038</option><option value="2038-07">Jul 2038</option><option value="2039-01">Ene 2039</option><option value="2039-04">Abr 2039</option><option value="2039-12">Dic 2039</option><option value="2040-05">May 2040</option><option value="2040-08">Ago 2040</option><option value="2040-10">Oct 2040</option><option value="2040-12">Dic 2040</option><option value="2043-08">Ago 2043</option><option value="2044-04">Abr 2044</option><option value="2053-12">Dic 2053</option><option value="2055-10">Oct 2055</option></select><span>→</span><select id="fFinHasta" style="flex:1"><option value="">—</option><option value="2026-04">Abr 2026</option><option value="2026-06">Jun 2026</option><option value="2026-07">Jul 2026</option><option value="2026-08">Ago 2026</option><option value="2026-09">Sep 2026</option><option value="2026-10">Oct 2026</option><option value="2026-11">Nov 2026</option><option value="2026-12">Dic 2026</option><option value="2027-01">Ene 2027</option><option value="2027-02">Feb 2027</option><option value="2027-03">Mar 2027</option><option value="2027-04">Abr 2027</option><option value="2027-05">May 2027</option><option value="2027-07">Jul 2027</option><option value="2027-10">Oct 2027</option><option value="2027-11">Nov 2027</option><option value="2027-12">Dic 2027</option><option value="2028-01">Ene 2028</option><option value="2028-02">Feb 2028</option><option value="2028-03">Mar 2028</option><option value="2028-04">Abr 2028</option><option value="2028-05">May 2028</option><option value="2028-07">Jul 2028</option><option value="2028-08">Ago 2028</option><option value="2028-10">Oct 2028</option><option value="2029-01">Ene 2029</option><option value="2029-03">Mar 2029</option><option value="2029-04">Abr 2029</option><option value="2029-06">Jun 2029</option><option value="2029-07">Jul 2029</option><option value="2029-08">Ago 2029</option><option value="2029-09">Sep 2029</option><option value="2029-10">Oct 2029</option><option value="2029-11">Nov 2029</option><option value="2029-12">Dic 2029</option><option value="2030-01">Ene 2030</option><option value="2030-03">Mar 2030</option><option value="2030-04">Abr 2030</option><option value="2030-05">May 2030</option><option value="2030-07">Jul 2030</option><option value="2030-08">Ago 2030</option><option value="2030-10">Oct 2030</option><option value="2030-11">Nov 2030</option><option value="2031-01">Ene 2031</option><option value="2031-02">Feb 2031</option><option value="2031-03">Mar 2031</option><option value="2031-04">Abr 2031</option><option value="2031-07">Jul 2031</option><option value="2031-10">Oct 2031</option><option value="2032-01">Ene 2032</option><option value="2032-04">Abr 2032</option><option value="2032-05">May 2032</option><option value="2032-07">Jul 2032</option><option value="2032-08">Ago 2032</option><option value="2032-10">Oct 2032</option><option value="2033-01">Ene 2033</option><option value="2033-02">Feb 2033</option><option value="2033-03">Mar 2033</option><option value="2033-04">Abr 2033</option><option value="2033-10">Oct 2033</option><option value="2033-12">Dic 2033</option><option value="2034-01">Ene 2034</option><option value="2034-02">Feb 2034</option><option value="2034-04">Abr 2034</option><option value="2034-05">May 2034</option><option value="2034-06">Jun 2034</option><option value="2034-07">Jul 2034</option><option value="2034-08">Ago 2034</option><option value="2034-10">Oct 2034</option><option value="2034-12">Dic 2034</option><option value="2035-01">Ene 2035</option><option value="2035-02">Feb 2035</option><option value="2035-03">Mar 2035</option><option value="2035-04">Abr 2035</option><option value="2035-05">May 2035</option><option value="2035-08">Ago 2035</option><option value="2035-10">Oct 2035</option><option value="2035-11">Nov 2035</option><option value="2036-01">Ene 2036</option><option value="2036-04">Abr 2036</option><option value="2036-11">Nov 2036</option><option value="2038-01">Ene 2038</option><option value="2038-07">Jul 2038</option><option value="2039-01">Ene 2039</option><option value="2039-04">Abr 2039</option><option value="2039-12">Dic 2039</option><option value="2040-05">May 2040</option><option value="2040-08">Ago 2040</option><option value="2040-10">Oct 2040</option><option value="2040-12">Dic 2040</option><option value="2043-08">Ago 2043</option><option value="2044-04">Abr 2044</option><option value="2053-12">Dic 2053</option><option value="2055-10">Oct 2055</option></select></div></div>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <thead><tr>
+        <th data-col="Nro contrato" style="width:78px">Contrato<i class="si"></i></th>
+        <th data-col="Suministro / grupo dem." style="min-width:180px">Suministro<i class="si"></i></th>
+        <th data-col="Vendedor" style="width:140px">Vendedor<i class="si"></i></th>
+        <th data-col="Conj. Generador" style="width:105px">Generador<i class="si"></i></th>
+        <th data-col="TIPO RECURSO" style="width:95px">Tipo<i class="si"></i></th>
+        <th data-col="inicio_str" style="width:88px">Inicio<i class="si"></i></th>
+        <th data-col="fin_str" style="width:88px">Fin<i class="si"></i></th>
+        <th data-col="precio_usd" style="width:88px">Precio<i class="si"></i></th>
+        <th data-col="tope_anual_mwh" style="width:155px">Vol. anual (MWh)<i class="si"></i></th>
+        <th data-col="Tipo contrato" style="min-width:125px">Tipo contrato<i class="si"></i></th>
+      </tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  <div class="paginator">
+    <button class="pag-btn" id="btnPrev" onclick="changePage(-1)">← Anterior</button>
+    <span class="pag-info" id="pageInfo"></span>
+    <button class="pag-btn" id="btnNext" onclick="changePage(1)">Siguiente →</button>
+    <span class="pag-total" id="pagTotal"></span>
+  </div>
+</div>
+</main>
+
+<script>
+const BLUE='#2155a3',AMBER='#b06a10',GRAY='#ccc9be';
+const BA='rgba(33,85,163,.75)',AA='rgba(176,106,16,.7)';
+
+// ── Carga desde GitHub ────────────────────────────────────────────────────────
+const GITHUB_BASE = 'https://raw.githubusercontent.com/daniraggio/dashboard-energia/main/data/';
+const EXCEL_FILES = {
+  contratos:   'CONTRATOS.xlsx',
+  topes:       'TOPES.xlsx',
+  generadores: 'Generador_por_conjunto.xlsx',
+  params:      'PAR%C3%81METROS_VARIABLES.xlsx',  // PARÁMETROS_VARIABLES.xlsx URL-encoded
+  caract:      'CARACTER%C3%8DSTICAS.xlsx',        // CARACTERÍSTICAS.xlsx URL-encoded
+};
+
+function setLoadingMsg(msg){ document.getElementById('loadingMsg').textContent = msg; }
+function hideLoading(){ document.getElementById('loadingOverlay').style.display='none'; }
+function showLoadingError(msg){
+  const el = document.getElementById('loadingOverlay');
+  el.innerHTML = '<div style="text-align:center;padding:32px;font-family:IBM Plex Sans,sans-serif">'
+    + '<div style="font-size:32px;margin-bottom:12px">⚠️</div>'
+    + '<div style="font-size:15px;font-weight:600;color:#1a1916;margin-bottom:8px">Error al cargar los datos</div>'
+    + '<div style="font-size:13px;color:#6b6860;max-width:400px;margin-bottom:20px">' + msg + '</div>'
+    + '<button onclick="document.getElementById(\'loadingOverlay\').style.display=\'none\'" '
+    + 'style="font-family:IBM Plex Sans,sans-serif;font-size:13px;padding:7px 18px;border:1px solid #ccc9be;border-radius:6px;background:#fff;cursor:pointer">Cerrar</button>'
+    + '</div>';
+}
+
+async function fetchExcel(filename){
+  const url = GITHUB_BASE + filename;
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error('No se pudo descargar ' + filename + ' (HTTP ' + resp.status + ')');
+  const buf = await resp.arrayBuffer();
+  return XLSX.read(new Uint8Array(buf), {type:'array'});
+}
+
+function parseColumn(wb, sheetIndex){
+  const sheet = wb.Sheets[wb.SheetNames[sheetIndex||0]];
+  return XLSX.utils.sheet_to_json(sheet, {defval:null});
+}
+
+function safeFloat(x){
+  if(x===null||x===undefined||x==='') return null;
+  const v = parseFloat(x);
+  return (!isNaN(v) && v > 0) ? Math.round(v*100)/100 : null;
+}
+
+function parsePrice(s){
+  if(!s) return null;
+  const m = String(s).match(/(\d+\.?\d*)\s*U\$S/);
+  return m ? parseFloat(m[1]) : null;
+}
+
+async function loadFromGitHub(){
+  try {
+    setLoadingMsg('Descargando CONTRATOS.xlsx...');
+    const wbContratos = await fetchExcel(EXCEL_FILES.contratos);
+
+    setLoadingMsg('Descargando TOPES.xlsx...');
+    const wbTopes = await fetchExcel(EXCEL_FILES.topes);
+
+    setLoadingMsg('Descargando Generador_por_conjunto.xlsx...');
+    const wbGen = await fetchExcel(EXCEL_FILES.generadores);
+
+    setLoadingMsg('Descargando PARÁMETROS_VARIABLES.xlsx...');
+    const wbParams = await fetchExcel(EXCEL_FILES.params);
+
+    setLoadingMsg('Procesando datos...');
+
+    // ── Parse CONTRATOS ──
+    const contratos = parseColumn(wbContratos);
+
+    // ── Parse tipo recurso from generadores ──
+    const genRows = parseColumn(wbGen);
+    const genTipo = {};
+    genRows.forEach(r => {
+      const conj = String(r['CONJUNTO GENERADOR']||'');
+      const tipo = r['TIPO RECURSO'];
+      if(!tipo) return;
+      const m = conj.match(/\(([^)]+)\)/);
+      const code = m ? m[1].trim() : conj.trim();
+      if(code) genTipo[code] = tipo;
+    });
+
+    // ── Parse precios from params ──
+    const paramRows = parseColumn(wbParams);
+    const precios = {};
+    paramRows.forEach(r => {
+      const param = String(r['Parámetro']||r['Parametro']||'');
+      if(!param.toLowerCase().includes('precio')) return;
+      const nro = String(r['Nro contrato']||'').padStart(6,'0');
+      const val = parsePrice(r['Valor']);
+      if(val && (!precios[nro] || r['Inicio'] > (precios[nro]._ini||''))) {
+        precios[nro] = {precio: val, _ini: r['Inicio']||''};
+      }
+    });
+
+    // ── Parse topes ──
+    const topeRows = parseColumn(wbTopes);
+    const topes = {};
+    topeRows.forEach(r => {
+      const nro = String(r['Contrato']||'').padStart(6,'0');
+      const anual   = safeFloat(r['Tope anual [MWh]']);
+      const mensual = safeFloat(r['Tope mensual [MWh]']);
+      const val = anual || (mensual ? Math.round(mensual*12*10)/10 : null);
+      if(val && (!topes[nro] || (r['Fecha desde']||'') > (topes[nro]._ini||''))) {
+        topes[nro] = {vol: val, _ini: r['Fecha desde']||''};
+      }
+    });
+
+    // ── Build today date ──
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    // ── Merge into records ──
+    const records = [];
+    contratos.forEach(r => {
+      const nro = String(r['Nro contrato']||'').padStart(6,'0');
+      if(!nro || nro==='000000') return;
+
+      const finRaw = r['Fin'];
+      const iniRaw = r['Inicio'];
+      let finDate, iniDate;
+      try { finDate = finRaw instanceof Date ? finRaw : new Date(finRaw); } catch(e){ return; }
+      try { iniDate = iniRaw instanceof Date ? iniRaw : new Date(iniRaw); } catch(e){ iniDate = null; }
+      if(!finDate || isNaN(finDate)) return;
+      if(finDate < today) return; // solo vigentes
+
+      const fin_str = finDate.toISOString().slice(0,10);
+      const inicio_str = iniDate && !isNaN(iniDate) ? iniDate.toISOString().slice(0,10) : '';
+
+      const conjCode = String(r['Conj. Generador']||'').trim();
+      const tipoRec = genTipo[conjCode] || '';
+      const precioData = precios[nro] || precios[nro.replace(/^0+/,'')];
+      const topeData   = topes[nro]   || topes[nro.replace(/^0+/,'')];
+
+      records.push({
+        'Nro contrato':             nro,
+        'Vendedor':                 String(r['Vendedor']||''),
+        'Suministro / grupo dem.':  String(r['Suministro / grupo dem.']||r['Suministro']||''),
+        'Conj. Generador':          conjCode,
+        'TIPO RECURSO':             tipoRec,
+        'inicio_str':               inicio_str,
+        'fin_str':                  fin_str,
+        'precio_usd':               precioData ? precioData.precio : null,
+        'Tipo contrato':            String(r['Tipo contrato']||''),
+        'tope_anual_mwh':           topeData ? topeData.vol : null,
+      });
+    });
+
+    // ── Inject into ALL ──
+    ALL.push(...records);
+
+    // ── Update EXISTING_IDS ──
+    EXISTING_IDS.clear();
+    EXISTING_IDS_NORM.clear();
+    ALL.forEach(r => {
+      EXISTING_IDS.add(r['Nro contrato']);
+      EXISTING_IDS_NORM.add(String(r['Nro contrato']).replace(/^0+/,''));
+    });
+
+    // ── Update KPIs and charts ──
+    const vigentes = ALL.length;
+    const ren = ALL.filter(r=>r['TIPO RECURSO']==='Renovable').length;
+    document.querySelector('.kpi-value.c-blue') && (document.getElementById('kpiVigVal').textContent = vigentes.toLocaleString('es'));
+
+    setLoadingMsg('Inicializando dashboard...');
+    applyFilters();
+    hideLoading();
+    console.log('✅ Cargados', records.length, 'contratos vigentes desde GitHub');
+
+  } catch(err) {
+    console.error('Error cargando desde GitHub:', err);
+    showLoadingError(err.message + '<br><br>Verificá que los archivos estén en <code>data/</code> en el repo y que el repo sea público.');
+  }
+}
+
+// Ejecutar al cargar la página
+window.addEventListener('DOMContentLoaded', loadFromGitHub);
+
+const CUIT_NAMES={"30-51688824-1": "P.Eol. Vientos Olavarría", "30-52278060-6": "P.Eol. Aluar I", "30-52655265-9": "Pampa Energía", "30-52671272-9": "LDC Argentina", "30-53378967-2": "Genneia", "30-55081599-7": "Eol. Buena Ventura", "30-62971795-8": "Helios Santa Rosa 2", "30-62982706-0": "Agua del Cajón", "30-65225424-8": "Costanera", "30-65599219-3": "Dock Sud", "30-66346111-3": "AES Paraná", "30-66523411-4": "Genneia", "30-67642119-6": "Hid. Los Nihuiles", "30-69224359-1": "Termoandes", "30-69470158-9": "Potrerillos", "30-70050075-2": "Solar de Los Llanos", "30-70083497-9": "Pampa Energía CC", "30-70882520-0": "Solar Anchipurac", "30-70969733-8": "Vientos Neuquinos I", "30-70982458-5": "Solar Victorica", "30-70983613-3": "Eol. Diadema 1", "30-71120405-5": "FV C.Honda + La Rioja", "30-71132206-6": "Genneia", "30-71158444-3": "Pampa Energía", "30-71242276-5": "Eol. Bicentenario 2", "30-71312200-5": "Vientos Neuquinos I", "30-71412830-9": "YPF Energía Eléctrica", "30-71415512-8": "P.S. Pampa del Infierno", "30-71474937-0": "PS V. María del Río Seco", "30-71518744-9": "Eol. La Energética", "30-71526384-6": "PS Cura Brochero Ampl.", "30-71534545-1": "Raizen", "30-71536578-9": "PS Amanecer IV", "30-71539912-8": "Eol. 3 Picos", "30-71556280-0": "Vientos Olavarría", "30-71556281-9": "Genoveva+Manq+Ol", "30-71559121-5": "Solar Villa Ángela 1", "30-71572949-7": "Solar P. Los Llanos", "30-71592816-3": "PE San Luis Norte", "30-71595899-2": "FV La Cumbre 2", "30-71609599-8": "Eol. La Rinconada", "30-71609845-8": "FV La Cumbre 2", "30-71610373-7": "PS Cura Brochero", "30-71610419-9": "PS V. María del Río Seco M.", "30-71617892-3": "Eol. Cañadón León", "30-71644849-1": "Genneia", "30-71729321-1": "PS La Salvación", "30-71765521-0": "Solar El Quemado", "30-71853263-5": "Genneia", "30-71868101-0": "Hid. El Chocón", "30-71868196-7": "Hid. Alicurá", "30-71869033-8": "Hid. Cerros Colorados", "30-71870493-2": "Hid. Piedra del Águila", "30-71872506-9": "Solar La Perla", "30-71882580-2": "Solar El Quemado", "30-71918704-4": "Hid. Las Maderas", "30-99902748-9": "EPEC", "33-61597477-9": "Céspedes", "33-65030549-9": "Central Puerto", "33-68735847-9": "Hid. Reyes", "33-70726132-9": "Solar Villa Ángela 1", "33-71194489-9": "Roca", "33-71869886-9": "Genneia"};
+const BY_YEAR_BASE=[{y:2025,r:189,nr:23},{y:2026,r:352,nr:178},{y:2027,r:185,nr:405},{y:2028,r:99,nr:11},{y:2029,r:205,nr:22},{y:2030,r:284,nr:7},{y:2031,r:29,nr:3},{y:2032,r:14,nr:0},{y:2033,r:34,nr:0},{y:2034,r:90,nr:1},{y:2035,r:32,nr:2},{y:2036,r:4,nr:0},{y:2039,r:51,nr:0},{y:2040,r:5,nr:0},{y:2053,r:7,nr:0}];
+const PRICE_BASE=[{r:'< 30',ren:2,nor:7},{r:'30–50',ren:55,nor:80},{r:'50–60',ren:433,nor:238},{r:'60–70',ren:889,nor:67},{r:'70–80',ren:18,nor:1},{r:'80–100',ren:4,nor:4},{r:'> 100',ren:1,nor:0}];
+const PRICE_BINS=[[-Infinity,30,'< 30'],[30,50,'30–50'],[50,60,'50–60'],[60,70,'60–70'],[70,80,'70–80'],[80,100,'80–100'],[100,Infinity,'> 100']];
+const ALL=[];
+
+function fmtMwh(v){
+  if(v==null) return '—';
+  if(v>=1e6) return (v/1e6).toFixed(2).replace('.',',')+' M';
+  if(v>=1e3) return (v/1e3).toFixed(1).replace('.',',')+' k';
+  return v.toLocaleString('es',{maximumFractionDigits:1});
+}
+
+const CO={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{bodyFont:{family:'IBM Plex Mono'}}}};
+let activeBarLabel=null; // tracks clicked month bar
+let zoomedYear=null;     // tracks clicked year bar (zoom into months)
+
+const chartAnio=new Chart(document.getElementById('chartAnio'),{type:'bar',data:{labels:BY_YEAR_BASE.map(d=>d.y),datasets:[{label:'Renovable',data:BY_YEAR_BASE.map(d=>d.r),backgroundColor:BA,stack:'s'},{label:'No renovable',data:BY_YEAR_BASE.map(d=>d.nr),backgroundColor:AA,stack:'s'}]},options:{...CO,onHover:function(evt,els){evt.native.target.style.cursor=els&&els.length?'pointer':'default';},onClick:function(evt,els){
+  if(!els||!els.length){
+    // click on empty area — if zoomed in, zoom back out
+    if(zoomedYear!==null){zoomedYear=null;activeBarLabel=null;document.getElementById('fFinDesde').value='';document.getElementById('fFinHasta').value='';applyFilters();}
+    return;
+  }
+  const label=String(chartAnio.data.labels[els[0].index]);
+  const isMonthLabel=/^[A-Za-záéíóú]+ \d{4}$/.test(label);
+  if(isMonthLabel){
+    // click on a month bar — filter table by that month, toggle
+    if(activeBarLabel===label){
+      activeBarLabel=null;
+      chartAnio.data.datasets.forEach(ds=>{ds.backgroundColor=BA_arr||BA;});
+      chartAnio.update('none');
+      applyFilters();
+    } else {
+      activeBarLabel=label;
+      chartAnio.data.datasets.forEach(ds=>{
+        ds.backgroundColor=chartAnio.data.labels.map((l,i)=>{
+          const base=ds.label==='Renovable'?BA:AA;
+          return i===els[0].index?base:'rgba(180,180,180,.3)';
+        });
+      });
+      chartAnio.update('none');
+      applyFilters();
+    }
+  } else {
+    // click on a year bar — zoom into monthly view for that year
+    if(zoomedYear===Number(label)){
+      // click same year again — zoom back out
+      zoomedYear=null;activeBarLabel=null;
+      document.getElementById('fFinDesde').value='';
+      document.getElementById('fFinHasta').value='';
+      applyFilters();
+    } else {
+      zoomedYear=Number(label);activeBarLabel=null;
+      // sync fin date filters to that year
+      const finD=document.getElementById('fFinDesde');
+      const finH=document.getElementById('fFinHasta');
+      const yStr=String(Number(label));
+      // find closest month options
+      const opts=[...finD.options].map(o=>o.value).filter(v=>v);
+      const from=opts.find(v=>v.startsWith(yStr+'-'))||'';
+      const to=[...opts].reverse().find(v=>v.startsWith(yStr+'-'))||'';
+      finD.value=from;
+      finH.value=to;
+      applyFilters();
+    }
+  }
+},cursor:'pointer',scales:{x:{stacked:true,ticks:{font:{size:10,family:'IBM Plex Mono'},maxRotation:45,autoSkip:false}},y:{stacked:true,ticks:{font:{size:10}}}}}});
+const chartPrecios=new Chart(document.getElementById('chartPrecios'),{type:'bar',data:{labels:PRICE_BASE.map(d=>d.r),datasets:[{label:'Renovable',data:PRICE_BASE.map(d=>d.ren),backgroundColor:BA,stack:'s'},{label:'No renovable',data:PRICE_BASE.map(d=>d.nor),backgroundColor:AA,stack:'s'}]},options:{...CO,onHover:function(evt,els){evt.native.target.style.cursor=els&&els.length?'pointer':'default';},onClick:function(evt,els){if(!els||!els.length)return;const label=chartPrecios.data.labels[els[0].index];const PRICE_MAP={'< 30':'0-30','30–50':'30-50','50–60':'50-60','60–70':'60-70','70–80':'70-80','80–100':'80-9999','> 100':'80-9999'};const val=PRICE_MAP[label]||'';const sel=document.getElementById('fPrecio');if(sel.value===val){sel.value='';}else{sel.value=val;}applyFilters();},scales:{x:{stacked:true,ticks:{font:{size:11}}},y:{stacked:true,ticks:{font:{size:10}}}}}});
+const chartDonut=new Chart(document.getElementById('chartDonut'),{type:'doughnut',data:{labels:['Renovable','No Renovable','Sin datos'],datasets:[{data:[1585,652,63],backgroundColor:[BLUE,AMBER,GRAY],borderWidth:0}]},options:{...CO,onHover:function(evt,els){evt.native.target.style.cursor=els&&els.length?'pointer':'default';},onClick:function(evt,els){if(!els||!els.length)return;const label=chartDonut.data.labels[els[0].index];const TYPE_MAP={'Renovable':'Renovable','No Renovable':'No Renovable','Sin datos':''};const val=TYPE_MAP[label]??'';const sel=document.getElementById('fTipo');if(sel.value===val){sel.value='';}else{sel.value=val;}applyFilters();},cutout:'68%'}});
+const chartVend=new Chart(document.getElementById('chartVendedores'),{type:'bar',data:{labels:["Pampa Energía", "YPF Energía Eléctrica", "Genoveva+Manq+Ol", "Genneia", "Central Puerto", "FV La Cumbre 2", "Pampa Energía", "Eol. 3 Picos", "Genneia", "Costanera"],datasets:[{label:'Contratos',data:[477, 281, 247, 142, 123, 106, 100, 65, 53, 50],backgroundColor:BA,borderRadius:3}]},options:{...CO,onHover:function(evt,els){evt.native.target.style.cursor=els&&els.length?'pointer':'default';},onClick:function(evt,els){if(!els||!els.length)return;const name=chartVend.data.labels[els[0].index];// find CUIT by name
+const cuit=Object.entries(CUIT_NAMES).find(([k,v])=>v===name)?.[0]||'';const sel=document.getElementById('fVendedor');if(sel.value===cuit){sel.value='';}else{sel.value=cuit;}applyFilters();},indexAxis:'y',scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:11}}}}}});
+
+const PER=30;
+let page=0,filtered=[],sortCol=null,sortDir=1,isFiltered=false,volMax=1;
+
+function monthDiff(a,b){
+  const [ay,am]=a.slice(0,7).split('-').map(Number);
+  const [by,bm]=b.slice(0,7).split('-').map(Number);
+  return (by-ay)*12+(bm-am);
+}
+
+function updateCharts(data){
+  const isAll=!isFiltered;
+  ['badgeAnio','badgePrecio','badgeDonut','badgeVend'].forEach(id=>document.getElementById(id).classList.toggle('visible',!isAll));
+  document.getElementById('chartNote').textContent=isAll?'mostrando todos los contratos vigentes':'mostrando '+data.length+' contratos filtrados';
+  // detect if filtered range spans <= 12 months OR a year was clicked -> switch to monthly view
+  const fins=data.map(r=>r.fin_str).filter(Boolean).sort();
+  const spanMonths=fins.length>=2?monthDiff(fins[0],fins[fins.length-1]):0;
+  const useMonthly=zoomedYear!==null||(isFiltered&&spanMonths<=12);
+  document.getElementById('chartAnioTitle').textContent=useMonthly?(zoomedYear?'Vencimientos — '+zoomedYear+' (por mes)':'Vencimientos por mes'):'Vencimientos por año';
+  document.getElementById('chartAnioSubtitle').textContent=useMonthly?'Hacé click en un mes para filtrar la tabla · click de nuevo para volver':'Hacé click en un año para ver el detalle mensual';
+  if(useMonthly){
+    const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const mm={};
+    // if zoomed into a year, only show that year's months
+    const src=zoomedYear!==null?data.filter(r=>r.fin_str&&r.fin_str.startsWith(String(zoomedYear))):data;
+    src.forEach(r=>{const m=r.fin_str?r.fin_str.slice(0,7):null;if(!m)return;if(!mm[m])mm[m]={r:0,nr:0};if(r['TIPO RECURSO']==='Renovable')mm[m].r++;else if(r['TIPO RECURSO']==='No Renovable')mm[m].nr++;});
+    const mks=Object.keys(mm).sort();
+    chartAnio.data.labels=mks.map(m=>{const[y,mo]=m.split('-');return MESES[parseInt(mo)-1]+' '+y;});
+    chartAnio.data.datasets[0].data=mks.map(m=>mm[m].r);
+    chartAnio.data.datasets[1].data=mks.map(m=>mm[m].nr);
+    // highlight active month if any
+    if(activeBarLabel!==null){
+      chartAnio.data.datasets.forEach(ds=>{
+        ds.backgroundColor=chartAnio.data.labels.map((l,i)=>{
+          const base=ds.label==='Renovable'?BA:AA;
+          return l===activeBarLabel?base:'rgba(180,180,180,.3)';
+        });
+      });
+    } else {
+      chartAnio.data.datasets[0].backgroundColor=BA;
+      chartAnio.data.datasets[1].backgroundColor=AA;
+    }
+  } else {
+    const ym={};
+    data.forEach(r=>{const y=r.fin_str?parseInt(r.fin_str.slice(0,4)):null;if(!y)return;if(!ym[y])ym[y]={r:0,nr:0};if(r['TIPO RECURSO']==='Renovable')ym[y].r++;else if(r['TIPO RECURSO']==='No Renovable')ym[y].nr++;});
+    const yrs=Object.keys(ym).map(Number).sort((a,b)=>a-b);
+    chartAnio.data.labels=yrs;chartAnio.data.datasets[0].data=yrs.map(y=>ym[y].r);chartAnio.data.datasets[1].data=yrs.map(y=>ym[y].nr);
+    chartAnio.data.datasets[0].backgroundColor=BA;
+    chartAnio.data.datasets[1].backgroundColor=AA;
+  }
+  chartAnio.update('none');
+  const pb=PRICE_BINS.map(b=>({r:b[2],ren:0,nor:0}));
+  data.forEach(r=>{if(r.precio_usd==null)return;for(let i=0;i<PRICE_BINS.length;i++){if(r.precio_usd>=PRICE_BINS[i][0]&&r.precio_usd<PRICE_BINS[i][1]){if(r['TIPO RECURSO']==='Renovable')pb[i].ren++;else if(r['TIPO RECURSO']==='No Renovable')pb[i].nor++;break;}}});
+  chartPrecios.data.labels=pb.map(b=>b.r);chartPrecios.data.datasets[0].data=pb.map(b=>b.ren);chartPrecios.data.datasets[1].data=pb.map(b=>b.nor);
+  // highlight active price filter
+  const activePrecio=document.getElementById('fPrecio').value;
+  const PRICE_MAP_R={'0-30':'< 30','30-50':'30–50','50-60':'50–60','60-70':'60–70','70-80':'70–80','80-9999':'80–100'};
+  const activePLabel=PRICE_MAP_R[activePrecio]||null;
+  chartPrecios.data.datasets.forEach(ds=>{
+    ds.backgroundColor=activePLabel?pb.map(b=>b.r===activePLabel?(ds.label==='Renovable'?BA:AA):'rgba(180,180,180,.3)'):(ds.label==='Renovable'?BA:AA);
+  });
+  chartPrecios.update('none');
+  let dR=0,dNR=0,dNA=0;
+  data.forEach(r=>{const t=r['TIPO RECURSO'];if(t==='Renovable')dR++;else if(t==='No Renovable')dNR++;else dNA++;});
+  const tot=dR+dNR+dNA||1;
+  chartDonut.data.datasets[0].data=[dR,dNR,dNA];
+  // highlight active tipo in donut
+  const activeTipo=document.getElementById('fTipo').value;
+  const donutColors=[BLUE,AMBER,GRAY];
+  chartDonut.data.datasets[0].backgroundColor=activeTipo
+    ?['Renovable','No Renovable','Sin datos'].map((l,i)=>l===activeTipo?donutColors[i]:'rgba(180,180,180,.3)')
+    :donutColors;
+  chartDonut.update('none');
+  document.getElementById('ds-r').textContent=dR.toLocaleString('es');
+  document.getElementById('ds-rp').textContent=Math.round(dR/tot*100)+'%';
+  document.getElementById('ds-nr').textContent=dNR.toLocaleString('es');
+  document.getElementById('ds-nrp').textContent=Math.round(dNR/tot*100)+'%';
+  document.getElementById('ds-na').textContent=dNA.toLocaleString('es');
+  document.getElementById('ds-nap').textContent=Math.round(dNA/tot*100)+'%';
+  const vm={};
+  data.forEach(r=>{const v=r['Vendedor']||'—';vm[v]=(vm[v]||0)+1;});
+  const topV=Object.entries(vm).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  chartVend.data.labels=topV.map(([c])=>CUIT_NAMES[c]||c);
+  chartVend.data.datasets[0].data=topV.map(([,n])=>n);
+  // highlight active vendedor
+  const activeVend=document.getElementById('fVendedor').value;
+  const activeVendName=activeVend?CUIT_NAMES[activeVend]||activeVend:null;
+  chartVend.data.datasets[0].backgroundColor=activeVendName
+    ?chartVend.data.labels.map(l=>l===activeVendName?BA:'rgba(180,180,180,.3)')
+    :BA;
+  chartVend.update('none');
+  const prices=data.map(r=>r.precio_usd).filter(v=>v!=null).sort((a,b)=>a-b);
+  const med=prices.length?prices[Math.floor(prices.length/2)]:null;
+  const totalVol=data.reduce((s,r)=>s+(r.tope_anual_mwh||0),0);
+  document.getElementById('kpiVigVal').textContent=data.length.toLocaleString('es');
+  document.getElementById('kpiVigSub').textContent=isAll?'contratos vigentes':'contratos filtrados';
+  document.getElementById('kpiRenVal').textContent=dR.toLocaleString('es');
+  document.getElementById('kpiRenSub').textContent=Math.round(dR/tot*100)+'% de la selección';
+  document.getElementById('kpiPrecioVal').textContent=med!=null?med.toFixed(1).replace('.',','):'—';
+  document.getElementById('kpiVolVal').textContent=fmtMwh(totalVol||null);
+  volMax=Math.max(...data.map(r=>r.tope_anual_mwh||0),1);
+}
+
+function exportExcel(){
+  const COLS = [
+    {key:'Nro contrato',    label:'Nro Contrato'},
+    {key:'Suministro / grupo dem.', label:'Suministro'},
+    {key:'Vendedor',        label:'Vendedor (CUIT)'},
+    {key:'_vendedor_nombre',label:'Vendedor (Nombre)'},
+    {key:'Conj. Generador', label:'Generador'},
+    {key:'TIPO RECURSO',    label:'Tipo Recurso'},
+    {key:'inicio_str',      label:'Inicio'},
+    {key:'fin_str',         label:'Fin'},
+    {key:'precio_usd',      label:'Precio (U$S/MWh)'},
+    {key:'tope_anual_mwh',  label:'Vol. Anual (MWh)'},
+    {key:'Tipo contrato',   label:'Tipo Contrato'},
+  ];
+
+  const rows = filtered.map(r => {
+    const row = {};
+    COLS.forEach(c => {
+      if(c.key === '_vendedor_nombre') {
+        row[c.label] = CUIT_NAMES[r['Vendedor']] || '';
+      } else {
+        row[c.label] = r[c.key] ?? '';
+      }
+    });
+    return row;
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+
+  // Column widths
+  ws['!cols'] = [
+    {wch:12},{wch:45},{wch:18},{wch:22},{wch:14},{wch:14},
+    {wch:12},{wch:12},{wch:16},{wch:18},{wch:30}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Contratos');
+
+  // Build filename with active filter info
+  const today = new Date().toISOString().slice(0,10);
+  const suffix = filtered.length < 1924 ? '_filtrado_'+filtered.length : '_completo';
+  XLSX.writeFile(wb, 'contratos_energia_'+today+suffix+'.xlsx');
+}
+
+function applyFilters(){
+  const search=document.getElementById('fSearch').value.toLowerCase().trim();
+  const tipo=document.getElementById('fTipo').value;
+  const vend=document.getElementById('fVendedor').value;
+  const gen=document.getElementById('fGenerador').value;
+  const tc=document.getElementById('fTipoContrato').value;
+  const precio=document.getElementById('fPrecio').value;
+  const vol=document.getElementById('fVol').value;
+  const iniD=document.getElementById('fIniDesde').value;
+  const iniH=document.getElementById('fIniHasta').value;
+  const finD=document.getElementById('fFinDesde').value;
+  const finH=document.getElementById('fFinHasta').value;
+  isFiltered=!!(search||tipo||vend||gen||tc||precio||vol||iniD||iniH||finD||finH||zoomedYear!==null||activeBarLabel!==null);
+  filtered=ALL.filter(r=>{
+    if(tipo&&r['TIPO RECURSO']!==tipo)return false;
+    if(vend&&r['Vendedor']!==vend)return false;
+    if(gen&&r['Conj. Generador']!==gen)return false;
+    if(tc&&r['Tipo contrato']!==tc)return false;
+    if(precio){
+      if(precio==='null'){if(r.precio_usd!=null)return false;}
+      else{const[lo,hi]=precio.split('-').map(Number);if(r.precio_usd==null||r.precio_usd<lo||r.precio_usd>=hi)return false;}
+    }
+    if(vol){
+      if(vol==='null'){if(r.tope_anual_mwh!=null)return false;}
+      else{const[lo,hi]=vol.split('-').map(Number);if(r.tope_anual_mwh==null||r.tope_anual_mwh<lo||r.tope_anual_mwh>=hi)return false;}
+    }
+    if(iniD&&r.inicio_str.slice(0,7)<iniD)return false;
+    if(iniH&&r.inicio_str.slice(0,7)>iniH)return false;
+    if(finD&&r.fin_str.slice(0,7)<finD)return false;
+    if(finH&&r.fin_str.slice(0,7)>finH)return false;
+    if(search){
+      const hay=(r['Nro contrato']+' '+r['Suministro / grupo dem.']+' '+r['Conj. Generador']+' '+(r['Vendedor']||'')+' '+(CUIT_NAMES[r['Vendedor']]||'')).toLowerCase();
+      if(!hay.includes(search))return false;
+    }
+    // bar chart click filter
+    if(zoomedYear!==null||activeBarLabel!==null){
+      const fins=r.fin_str?r.fin_str.slice(0,7):null;
+      const finy=r.fin_str?r.fin_str.slice(0,4):null;
+      // first filter by year if zoomed
+      if(zoomedYear!==null&&finy!==String(zoomedYear))return false;
+      // then filter by month if a month bar is selected
+      if(activeBarLabel!==null){
+        const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        const parts=activeBarLabel.split(' ');
+        const mo=String(MESES.indexOf(parts[0])+1).padStart(2,'0');
+        const ym=parts[1]+'-'+mo;
+        if(fins!==ym)return false;
+      }
+    }
+    return true;
+  });
+  if(sortCol){
+    filtered.sort((a,b)=>{
+      let av=a[sortCol]??'',bv=b[sortCol]??'';
+      return typeof av==='number'&&typeof bv==='number'?sortDir*(av-bv):sortDir*String(av).localeCompare(String(bv),'es');
+    });
+  }
+  page=0;
+  document.getElementById('badgeCount').classList.toggle('filtered',isFiltered);
+  updateCharts(filtered);
+  render();
+}
+
+function clearFilters(){
+  ['fSearch','fTipo','fVendedor','fGenerador','fTipoContrato','fPrecio','fVol','fIniDesde','fIniHasta','fFinDesde','fFinHasta'].forEach(id=>{document.getElementById(id).value='';});
+  activeBarLabel=null;
+  zoomedYear=null;
+  chartAnio.data.datasets.forEach(ds=>{ds.backgroundColor=ds.label==='Renovable'?BA:AA;});
+  chartAnio.update('none');
+  applyFilters();
+}
+
+document.querySelectorAll('th[data-col]').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const col=th.dataset.col;
+    sortDir=(sortCol===col)?-sortDir:1;sortCol=col;
+    document.querySelectorAll('th').forEach(t=>t.classList.remove('sa','sd'));
+    th.classList.add(sortDir===1?'sa':'sd');
+    applyFilters();
+  });
+});
+
+function render(){
+  const start=page*PER,end=Math.min(start+PER,filtered.length);
+  document.getElementById('tableBody').innerHTML=filtered.slice(start,end).map(r=>{
+    const tipo=r['TIPO RECURSO'];
+    const tc=tipo==='Renovable'?'tag-r':tipo==='No Renovable'?'tag-nr':'tag-na';
+    const pr=r.precio_usd!=null?r.precio_usd.toFixed(1)+' U$S':'—';
+    const su=r['Suministro / grupo dem.']||'';
+    const vn=CUIT_NAMES[r['Vendedor']]||r['Vendedor']||'—';
+    const v=r.tope_anual_mwh;
+    const barW=v!=null?Math.round(Math.min(v/volMax,1)*60):0;
+    const volCell=v!=null
+      ?'<div class="vol-bar-wrap"><div class="vol-bar" style="width:'+barW+'px"></div><span class="vol-txt">'+fmtMwh(v)+'</span></div>'
+      :'<span class="vol-txt" style="color:var(--text3)">—</span>';
+    return '<tr>'
+      +'<td class="mono">'+r['Nro contrato']+'</td>'
+      +'<td title="'+su.replace(/"/g,'&quot;')+'">'+(su.length>34?su.slice(0,34)+'…':su)+'</td>'
+      +'<td title="'+(r['Vendedor']||'')+'">'+vn+'</td>'
+      +'<td class="mono" style="font-size:11px">'+(r['Conj. Generador']||'—')+'</td>'
+      +'<td><span class="tag '+tc+'">'+(tipo||'—')+'</span></td>'
+      +'<td class="mono">'+r.inicio_str+'</td>'
+      +'<td class="mono">'+r.fin_str+'</td>'
+      +'<td class="mono">'+pr+'</td>'
+      +'<td>'+volCell+'</td>'
+      +'<td style="font-size:11px;color:var(--text2)">'+r['Tipo contrato']+'</td>'
+      +'</tr>';
+  }).join('');
+  document.getElementById('pageInfo').textContent=filtered.length?(start+1)+'–'+end:'0';
+  document.getElementById('pagTotal').textContent=filtered.length+' contratos';
+  document.getElementById('badgeCount').textContent=filtered.length+' contratos';
+  document.getElementById('btnPrev').disabled=page===0;
+  document.getElementById('btnNext').disabled=end>=filtered.length;
+}
+
+window.changePage=function(d){page+=d;render();};
+
+['fTipo','fVendedor','fGenerador','fTipoContrato','fPrecio','fVol','fIniDesde','fIniHasta','fFinDesde','fFinHasta'].forEach(id=>
+  document.getElementById(id).addEventListener('change',applyFilters));
+let st;
+document.getElementById('fSearch').addEventListener('input',function(){clearTimeout(st);st=setTimeout(applyFilters,250);});
+
+applyFilters();
+
+// ══════════════════════════════════════════════════════
+// CONTRATOS NUEVOS — lógica de carga y comparación
+// ══════════════════════════════════════════════════════
+
+// Set de números de contrato ya existentes
+let EXISTING_IDS = new Set(ALL.map(r => r['Nro contrato']));
+// Version sin ceros para match flexible (Excel puede leer "002340" como numero 2340)
+let EXISTING_IDS_NORM = new Set(ALL.map(r => String(r['Nro contrato']).replace(/^0+/, '')));
+
+// Array de contratos nuevos detectados con metadata extra
+let newContracts = [];
+let newFiltered  = [];
+let newPage      = 0;
+const NEW_PER    = 50;
+
+// Semana ISO
+function getISOWeek(d){
+  const date = new Date(d);
+  date.setHours(0,0,0,0);
+  date.setDate(date.getDate()+3-(date.getDay()+6)%7);
+  const w1 = new Date(date.getFullYear(),0,4);
+  return 1+Math.round(((date-w1)/86400000-3+(w1.getDay()+6)%7)/7);
+}
+function weekLabel(dateStr){
+  const d = new Date(dateStr);
+  const w = getISOWeek(d);
+  const y = d.getFullYear();
+  // Range of that ISO week
+  const firstDay = new Date(y,0,1+(w-1)*7);
+  while(firstDay.getDay()!==1) firstDay.setDate(firstDay.getDate()-1);
+  const lastDay = new Date(firstDay); lastDay.setDate(firstDay.getDate()+6);
+  const fmt = dt => dt.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});
+  return `Sem ${w} (${fmt(firstDay)}–${fmt(lastDay)})`;
+}
+function monthLabel(dateStr){
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('es-AR',{year:'numeric',month:'long'});
+}
+
+// Parsear un workbook XLSX y extraer contratos
+function parseXLSXContracts(wb){
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const json  = XLSX.utils.sheet_to_json(sheet, {defval:null});
+  return json;
+}
+
+// Normalizar una fila del Excel al formato esperado
+function normalizeRow(row){
+  // Normalizar clave: quitar tildes, lowercase, colapsar espacios
+  const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+
+  // Buscar la clave en el row de forma flexible
+  const get = (...keys) => {
+    // Primero buscar exact match
+    for(const k of keys){ if(row[k]!=null) return row[k]; }
+    // Luego buscar normalized match contra las claves reales del row
+    const rowKeys = Object.keys(row);
+    for(const k of keys){
+      const nk = norm(k);
+      const found = rowKeys.find(rk => norm(rk) === nk);
+      if(found && row[found]!=null) return row[found];
+    }
+    // Búsqueda parcial como último recurso
+    for(const k of keys){
+      const nk = norm(k);
+      const found = rowKeys.find(rk => norm(rk).includes(nk) || nk.includes(norm(rk)));
+      if(found && row[found]!=null) return row[found];
+    }
+    return null;
+  };
+
+  return {
+    'Nro contrato':    String(get('Nro contrato','nro_contrato','Contrato','contrato','NRO_CONTRATO','Nro. contrato','Número contrato','Num contrato')||'').trim(),
+    'Vendedor':        get('Vendedor','vendedor','VENDEDOR','cuit_vendedor','CUIT'),
+    'Suministro / grupo dem.': get('Suministro / grupo dem.','Suministro','suministro','SUMINISTRO','grupo_dem','Suministro/grupo dem.'),
+    'Conj. Generador': get('Conj. Generador','Generador','generador','GENERADOR','conj_generador','Conjunto Generador'),
+    'TIPO RECURSO':    get('TIPO RECURSO','tipo_recurso','Tipo Recurso','TipoRecurso')||'',
+    'inicio_str':      get('inicio_str','Inicio','inicio','INICIO','fecha_inicio'),
+    'fin_str':         get('fin_str','Fin','fin','FIN','fecha_fin'),
+    'precio_usd':      parseFloat(get('precio_usd','Precio','precio','PRECIO','precio_usd'))||null,
+    'Tipo contrato':   get('Tipo contrato','tipo_contrato','TipoContrato','TIPO_CONTRATO'),
+    'tope_anual_mwh':  parseFloat(get('tope_anual_mwh','Tope Anual MWh','tope_anual','Vol anual MWh'))||null,
+  };
+}
+
+// Procesar archivos cargados
+function processFiles(files){
+  if(!files.length) return;
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0,10);
+  const semana   = weekLabel(todayStr);
+  const mes      = monthLabel(todayStr);
+
+  let loaded = 0;
+  const newFound = [];
+
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb   = XLSX.read(data, {type:'array'});
+        const rows = parseXLSXContracts(wb);
+        // Diagnóstico de columnas si no hay Nro contrato
+        if(rows.length > 0){
+          const colsDetected = Object.keys(rows[0]);
+          const nroCol = colsDetected.find(c => { const cn=c.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(); return cn.includes("nro")||cn==="contrato"; });
+          if(!nroCol){ console.warn("Columnas Excel detectadas:", colsDetected); }
+        }
+        rows.forEach(rawRow => {
+          const row = normalizeRow(rawRow);
+          if(!row['Nro contrato']) return;
+          // Comparar con y sin ceros a la izquierda (Excel puede leer "002340" como numero 2340)
+          const nroId = row['Nro contrato'];
+          const nroIdNorm = nroId.replace(/^0+/, '');
+          const yaExiste = EXISTING_IDS.has(nroId) || EXISTING_IDS_NORM.has(nroIdNorm);
+          if(!yaExiste){
+            // También revisar si ya fue detectado antes (evitar duplicados entre archivos)
+            if(!newContracts.some(x=>x['Nro contrato']===nroId||String(x['Nro contrato']).replace(/^0+/,'')===nroIdNorm)){
+              newFound.push({
+                ...row,
+                _fechaAgregado: todayStr,
+                _semana:  semana,
+                _mes:     mes,
+                _archivo: file.name,
+              });
+            }
+          }
+        });
+      } catch(err){
+        console.error('Error leyendo',file.name,err);
+      }
+      loaded++;
+      if(loaded===files.length){
+        newContracts.push(...newFound);
+        renderUploadedFiles();
+        buildNewFilters();
+        applyNewFilters();
+        updateNewNote();
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function updateNewNote(){
+  const el = document.getElementById('newContractsNote');
+  if(!newContracts.length){
+    el.textContent='No se detectaron contratos nuevos en los archivos cargados';
+    el.style.color='var(--text3)';
+  } else {
+    el.textContent=`${newContracts.length} contratos nuevos detectados`;
+    el.style.color='#5c2d9c';
+  }
+  document.getElementById('uploadPanel').classList.toggle('has-files', newContracts.length>0);
+}
+
+function renderUploadedFiles(){
+  const list = document.getElementById('uploadFilesList');
+  const sources = [...new Set(newContracts.map(r=>r._archivo))];
+  if(!sources.length){ list.style.display='none'; return; }
+  list.style.display='flex';
+  list.innerHTML = sources.map(f=>`
+    <span class="file-chip">
+      📄 ${f}
+      <button onclick="removeSource('${f}')" title="Quitar">×</button>
+    </span>`).join('');
+}
+
+window.removeSource = function(fname){
+  newContracts = newContracts.filter(r=>r._archivo!==fname);
+  EXISTING_IDS; // keep
+  renderUploadedFiles();
+  buildNewFilters();
+  applyNewFilters();
+  updateNewNote();
+};
+
+function buildNewFilters(){
+  const meses   = [...new Set(newContracts.map(r=>r._mes))].sort();
+  const semanas = [...new Set(newContracts.map(r=>r._semana))].sort();
+  const mSel    = document.getElementById('nfMes').value;
+  const sSel    = document.getElementById('nfSemana').value;
+  const mEl     = document.getElementById('nfMes');
+  const sEl     = document.getElementById('nfSemana');
+  mEl.innerHTML = '<option value="">Todos los meses</option>'+meses.map(m=>`<option value="${m}"${m===mSel?' selected':''}>${m}</option>`).join('');
+  sEl.innerHTML = '<option value="">Todas las semanas</option>'+semanas.map(s=>`<option value="${s}"${s===sSel?' selected':''}>${s}</option>`).join('');
+}
+
+function applyNewFilters(){
+  const search = document.getElementById('nfSearch').value.toLowerCase().trim();
+  const mes    = document.getElementById('nfMes').value;
+  const semana = document.getElementById('nfSemana').value;
+  newFiltered = newContracts.filter(r=>{
+    if(mes    && r._mes!==mes)        return false;
+    if(semana && r._semana!==semana)  return false;
+    if(search){
+      const hay = (r['Nro contrato']+' '+(r['Suministro / grupo dem.']||'')+' '+(r['Conj. Generador']||'')).toLowerCase();
+      if(!hay.includes(search)) return false;
+    }
+    return true;
+  });
+  newPage = 0;
+  renderNewTable();
+  updateNewKPIs();
+}
+
+function clearNewFilters(){
+  document.getElementById('nfSearch').value='';
+  document.getElementById('nfMes').value='';
+  document.getElementById('nfSemana').value='';
+  applyNewFilters();
+}
+
+function updateNewKPIs(){
+  const r  = newFiltered.filter(x=>x['TIPO RECURSO']==='Renovable').length;
+  const nr = newFiltered.filter(x=>x['TIPO RECURSO']==='No Renovable').length;
+  document.getElementById('newBadgeCount').textContent = newFiltered.length+' contratos';
+  document.getElementById('newBadgeCount').classList.toggle('filtered', newFiltered.length!==newContracts.length);
+  document.getElementById('newCountR').textContent  = r;
+  document.getElementById('newCountNR').textContent = nr;
+  // enable/disable agregar button
+  const btn = document.getElementById('btnAgregarBase');
+  if(btn){
+    const hasNew = newContracts.length > 0;
+    btn.style.opacity    = hasNew ? '1'    : '.4';
+    btn.style.pointerEvents = hasNew ? 'auto' : 'none';
+    btn.title = hasNew
+      ? `Incorporar ${newContracts.length} contrato${newContracts.length>1?'s':''} a la base y descargar el HTML actualizado`
+      : 'Cargá archivos Excel primero';
+  }
+}
+
+function renderNewTable(){
+  const body = document.getElementById('newTableBody');
+  const pag  = document.getElementById('newPaginator');
+  if(!newFiltered.length){
+    body.innerHTML=`<tr><td colspan="12" class="empty-new">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      ${newContracts.length?'No hay contratos que coincidan con los filtros':'Cargá archivos Excel para ver contratos nuevos'}
+    </td></tr>`;
+    pag.style.display='none';
+    return;
+  }
+  const start = newPage*NEW_PER;
+  const end   = Math.min(start+NEW_PER, newFiltered.length);
+  const page  = newFiltered.slice(start,end);
+  body.innerHTML = page.map(r=>{
+    const tipo = r['TIPO RECURSO'];
+    const tc   = tipo==='Renovable'?'tag-r':tipo==='No Renovable'?'tag-nr':'tag-na';
+    const tipoLabel = tipo||'S/D';
+    const pr   = r.precio_usd!=null?r.precio_usd.toFixed(1)+' U$S':'—';
+    const vol  = r.tope_anual_mwh!=null?r.tope_anual_mwh.toLocaleString('es-AR'):'—';
+    const vn   = CUIT_NAMES[r['Vendedor']]||r['Vendedor']||'—';
+    return `<tr>
+      <td class="mono">${r['Nro contrato']}</td>
+      <td title="${r['Suministro / grupo dem.']||''}">${(r['Suministro / grupo dem.']||'—').slice(0,40)}</td>
+      <td title="${vn}">${vn.slice(0,22)}</td>
+      <td>${r['Conj. Generador']||'—'}</td>
+      <td><span class="${tc}">${tipoLabel}</span></td>
+      <td class="mono">${r.inicio_str||'—'}</td>
+      <td class="mono">${r.fin_str||'—'}</td>
+      <td class="mono">${pr}</td>
+      <td class="mono">${vol}</td>
+      <td style="font-size:11px;color:var(--text2)">${r._mes||'—'}</td>
+      <td style="font-size:10px;color:var(--text3)">${r._semana||'—'}</td>
+      <td style="font-size:10px;color:var(--text3)" title="${r._archivo||''}">${(r._archivo||'—').slice(0,18)}</td>
+    </tr>`;
+  }).join('');
+  pag.style.display='flex';
+  document.getElementById('newPageInfo').textContent=`${start+1}–${end}`;
+  document.getElementById('newPagTotal').textContent=newFiltered.length+' contratos';
+  document.getElementById('btnNewPrev').disabled=newPage===0;
+  document.getElementById('btnNewNext').disabled=end>=newFiltered.length;
+}
+
+window.changeNewPage = function(d){ newPage+=d; renderNewTable(); };
+
+function exportNewExcel(){
+  if(!newFiltered.length){ alert('No hay contratos nuevos para exportar'); return; }
+  const COLS=[
+    {k:'Nro contrato',l:'Nro Contrato'},
+    {k:'Suministro / grupo dem.',l:'Suministro'},
+    {k:'Vendedor',l:'CUIT Vendedor'},
+    {k:'_vendedorNombre',l:'Vendedor'},
+    {k:'Conj. Generador',l:'Generador'},
+    {k:'TIPO RECURSO',l:'Tipo Recurso'},
+    {k:'inicio_str',l:'Inicio'},
+    {k:'fin_str',l:'Fin'},
+    {k:'precio_usd',l:'Precio U$S/MWh'},
+    {k:'tope_anual_mwh',l:'Vol. Anual MWh'},
+    {k:'Tipo contrato',l:'Tipo Contrato'},
+    {k:'_mes',l:'Mes Agregado'},
+    {k:'_semana',l:'Semana Agregado'},
+    {k:'_archivo',l:'Archivo Fuente'},
+    {k:'_fechaAgregado',l:'Fecha Agregado'},
+  ];
+  const rows = newFiltered.map(r=>{
+    const row={};
+    COLS.forEach(c=>{
+      if(c.k==='_vendedorNombre') row[c.l]=CUIT_NAMES[r['Vendedor']]||r['Vendedor']||'';
+      else row[c.l]=r[c.k]??'';
+    });
+    return row;
+  });
+  const ws=XLSX.utils.json_to_sheet(rows);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Contratos Nuevos');
+  XLSX.writeFile(wb,`contratos_nuevos_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+function agregarABase(){
+  if(!newContracts.length){ alert('No hay contratos nuevos para agregar.'); return; }
+
+  const n = newContracts.length;
+  if(!confirm(`¿Incorporar ${n} contrato${n>1?'s':''} nuevo${n>1?'s':''} a la base?\n\nEl dashboard se va a descargar con los datos actualizados.`)) return;
+
+  // 1. Merge new contracts into ALL
+  const merged = [...ALL, ...newContracts.map(r => {
+    // clean internal tracking fields before adding to base
+    const {_fechaAgregado, _semana, _mes, _archivo, _vendedorNombre, ...clean} = r;
+    return clean;
+  })];
+
+  // 2. Rebuild the ALL= assignment in the current page HTML
+  const html = document.documentElement.outerHTML;
+
+  // Replace the ALL= data with the merged array
+  const allMarker = 'const ALL=';
+  const allStart  = html.indexOf(allMarker);
+  if(allStart === -1){ alert('Error: no se encontró la base de datos en el HTML.'); return; }
+
+  // Find the end of the array: scan for ]; after the opening [
+  let depth = 0, i = allStart + allMarker.length, started = false;
+  for(; i < html.length; i++){
+    if(html[i]==='['){depth++;started=true;}
+    else if(html[i]===']'&&started){depth--;if(depth===0){i++;break;}}
+  }
+  // i now points right after the closing ]
+  const newAllJs = allMarker + JSON.stringify(merged, null, 0);
+  const newHtml  = html.slice(0, allStart) + newAllJs + html.slice(i);
+
+  // 3. Also clear the newContracts array in the new HTML so it starts clean
+  const newHtmlClean = newHtml.replace(
+    /let newContracts\s*=\s*\[.*?\];/s,
+    'let newContracts = [];'
+  );
+
+  // 4. Download
+  const blob = new Blob([newHtmlClean], {type:'text/html;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const today = new Date().toISOString().slice(0,10);
+  a.href     = url;
+  a.download = `dashboard_contratos_energia_${today}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // 5. Notify
+  setTimeout(()=> alert(`✅ Descargado con ${merged.length.toLocaleString('es')} contratos en la base.\n\nReemplazá el archivo anterior con este nuevo.`), 300);
+}
+
+// Event listeners para carga de archivos - se agregan después de inyectar el DOM
+function initNewContractsUI(){
+  const inp = document.getElementById('excelInput');
+  if(!inp) return;
+  inp.addEventListener('change', function(e){
+    processFiles(e.target.files);
+    this.value='';
+  });
+  const panel = document.getElementById('uploadPanel');
+  panel.addEventListener('dragover', e=>{ e.preventDefault(); panel.classList.add('drag-over'); });
+  panel.addEventListener('dragleave', ()=>panel.classList.remove('drag-over'));
+  panel.addEventListener('drop', e=>{
+    e.preventDefault();
+    panel.classList.remove('drag-over');
+    const files = Array.from(e.dataTransfer.files).filter(f=>f.name.match(/\.xlsx?$/i));
+    if(files.length) processFiles(files);
+  });
+  document.getElementById('nfSearch').addEventListener('input', function(){
+    clearTimeout(st); st=setTimeout(applyNewFilters,250);
+  });
+  ['nfMes','nfSemana'].forEach(id=>
+    document.getElementById(id).addEventListener('change',applyNewFilters));
+  renderNewTable();
+}
+</script>
+
+<!-- HTML de la sección nuevos contratos (al final del <main>) -->
+<script>
+// Insertar sección en el DOM antes de cerrar </main>
+(function(){
+  const main = document.querySelector('main.main');
+  const div  = document.createElement('div');
+  div.style.marginTop='30px';
+  div.innerHTML = `
+  <div class="section-label">Actualización desde Excel &middot; <span id="newContractsNote" style="font-weight:400;color:var(--text2)">Cargá archivos .xlsx para detectar contratos nuevos</span></div>
+
+  <div class="upload-panel" id="uploadPanel">
+    <div class="upload-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-2 9H9v-2h2v2zm0-4H9v-2h2v2zm4 4h-2v-2h2v2zm0-4h-2v-2h2v2z"/></svg></div>
+    <div class="upload-text">
+      <strong>Cargar archivos Excel (de la carpeta /data o desde donde estén)</strong>
+      <span>Seleccioná o arrastrá uno o varios .xlsx. Los contratos cuyo número no esté en la base actual quedarán marcados como nuevos.</span>
+    </div>
+    <label class="upload-btn" style="cursor:pointer">
+      Seleccionar archivos
+      <input type="file" id="excelInput" accept=".xlsx,.xls" multiple style="display:none">
+    </label>
+    <div class="upload-files-list" id="uploadFilesList" style="display:none"></div>
+  </div>
+
+  <div class="table-section">
+    <div class="table-header">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div class="table-title">Contratos nuevos detectados</div>
+        <span class="count-badge" id="newBadgeCount">0 contratos</span>
+        <div class="new-contracts-kpi" style="margin-left:8px">
+          <span>Renovables: <strong id="newCountR">0</strong></span>
+          <span style="margin-left:8px">No Renovables: <strong id="newCountNR">0</strong></span>
+        </div>
+      </div>
+      <button onclick="exportNewExcel()" style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 14px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .12s,color .12s" onmouseover="this.style.background='var(--green-bg)';this.style.color='var(--green-text)';this.style.borderColor='var(--green)'" onmouseout="this.style.background='var(--surface)';this.style.color='var(--text2)';this.style.borderColor='var(--border2)'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        Exportar nuevos
+      </button>
+      <button onclick="agregarABase()" id="btnAgregarBase" style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 14px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .12s,color .12s;opacity:.4;pointer-events:none" onmouseover="this.style.background='var(--blue-bg)';this.style.color='var(--blue-text)';this.style.borderColor='var(--blue)'" onmouseout="this.style.background='var(--surface)';this.style.color='var(--text2)';this.style.borderColor='var(--border2)'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+        Agregar a la base y descargar
+      </button>
+    </div>
+    <div class="new-filter-grid">
+      <div class="fgroup"><label>Buscar</label><input type="text" id="nfSearch" placeholder="Contrato, suministro…"></div>
+      <div class="fgroup"><label>Mes de agregado</label><select id="nfMes"><option value="">Todos los meses</option></select></div>
+      <div class="fgroup"><label>Semana de agregado</label><select id="nfSemana"><option value="">Todas las semanas</option></select></div>
+      <button class="btn-clear" onclick="clearNewFilters()">Limpiar</button>
+    </div>
+    <div class="table-scroll" style="max-height:500px">
+      <table>
+        <thead><tr>
+          <th style="width:80px">Contrato</th>
+          <th style="min-width:160px">Suministro</th>
+          <th style="width:130px">Vendedor</th>
+          <th style="width:100px">Generador</th>
+          <th style="width:90px">Tipo</th>
+          <th style="width:85px">Inicio</th>
+          <th style="width:85px">Fin</th>
+          <th style="width:85px">Precio</th>
+          <th style="width:110px">Vol. anual</th>
+          <th style="width:115px">Mes agregado</th>
+          <th style="width:130px">Semana agregado</th>
+          <th style="width:100px">Archivo</th>
+        </tr></thead>
+        <tbody id="newTableBody"></tbody>
+      </table>
+    </div>
+    <div class="paginator" id="newPaginator" style="display:none">
+      <button class="pag-btn" id="btnNewPrev" onclick="changeNewPage(-1)">← Ant.</button>
+      <span class="pag-info" id="newPageInfo">—</span>
+      <button class="pag-btn" id="btnNewNext" onclick="changeNewPage(1)">Sig. →</button>
+      <span class="pag-total" id="newPagTotal"></span>
+    </div>
+  </div>`;
+  main.appendChild(div);
+  initNewContractsUI();
+})();
+</script>
+</body>
+</html>
