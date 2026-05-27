@@ -78,6 +78,31 @@
   .vol-bar-wrap{display:flex;align-items:center;gap:6px;min-width:110px}
   .vol-bar{height:5px;border-radius:3px;background:var(--blue);opacity:.55;flex-shrink:0}
   .vol-txt{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);white-space:nowrap}
+  .precio-seasonal{
+    display:inline-flex;align-items:center;gap:4px;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;
+    background:var(--blue-bg);color:var(--blue-text);
+    padding:2px 6px;border-radius:4px;font-weight:600;
+    cursor:default;border-bottom:1px dashed var(--blue);
+    position:relative;
+  }
+  .precio-seasonal::before{
+    content:'↕';font-size:9px;opacity:.7;
+  }
+  /* Tooltip */
+  .precio-seasonal[data-tooltip]:hover::after{
+    content:attr(data-tooltip);
+    position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+    background:#1a1916;color:#fff;
+    font-size:11px;font-family:'IBM Plex Mono',monospace;font-weight:400;
+    white-space:pre;padding:8px 12px;border-radius:6px;
+    box-shadow:0 4px 16px rgba(0,0,0,.2);
+    z-index:100;pointer-events:none;
+    min-width:200px;
+  }
+  .precio-seasonal[data-tooltip]:hover::before{
+    content:'↕';
+  }
   .paginator{padding:10px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)}
   .pag-btn{font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;transition:background .1s}
   .pag-btn:hover:not(:disabled){background:var(--surface2)}
@@ -330,14 +355,40 @@ async function loadFromGitHub(){
 
     // ── Parse precios from params ──
     const paramRows = parseColumn(wbParams);
-    const precios = {};
+    const precioRows = {}; // nro -> array of {precio, ini, fin}
     paramRows.forEach(r => {
       const param = String(r['Parámetro']||r['Parametro']||'');
       if(!param.toLowerCase().includes('precio')) return;
       const nro = String(r['Nro contrato']||'').padStart(6,'0');
       const val = parsePrice(r['Valor']);
-      if(val && (!precios[nro] || r['Inicio'] > (precios[nro]._ini||''))) {
-        precios[nro] = {precio: val, _ini: r['Inicio']||''};
+      if(!val) return;
+      if(!precioRows[nro]) precioRows[nro] = [];
+      precioRows[nro].push({precio: val, ini: r['Inicio']||'', fin: r['Fin']||''});
+    });
+
+    // Build precios map: detect seasonal (multiple distinct prices with Fin dates)
+    const precios = {};
+    const MESES_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    Object.entries(precioRows).forEach(([nro, rows]) => {
+      rows.sort((a,b) => String(a.ini).localeCompare(String(b.ini)));
+      // Detect seasonal: multiple rows with distinct numeric prices
+      const numericRows = rows.filter(r => typeof r.precio === 'number');
+      const distinctPrices = new Set(numericRows.map(r => r.precio));
+      const hasFin = numericRows.some(r => r.fin && String(r.fin).length > 0);
+      if(numericRows.length > 1 && distinctPrices.size > 1 && hasFin){
+        // Build tooltip text: show each period
+        const lines = numericRows.map(r => {
+          const ini = String(r.ini).slice(0,7); // YYYY-MM
+          const fin = String(r.fin).slice(0,7);
+          const iniLabel = ini.length >= 7 ? MESES_ES[parseInt(ini.slice(5,7))-1]+' '+ini.slice(0,4) : ini;
+          const finLabel = fin.length >= 7 ? MESES_ES[parseInt(fin.slice(5,7))-1]+' '+fin.slice(0,4) : (fin ? fin : '→');
+          return iniLabel + (finLabel ? ' – ' + finLabel : '') + ': ' + r.precio.toFixed(1) + ' U$S';
+        });
+        precios[nro] = {precio: 'por temporada', seasonal: lines};
+      } else {
+        // Single price: use most recent
+        const latest = rows[rows.length-1];
+        precios[nro] = {precio: latest.precio};
       }
     });
 
@@ -454,6 +505,7 @@ async function loadFromGitHub(){
         'inicio_str':               inicio_str,
         'fin_str':                  fin_str,
         'precio_usd':               precioData ? precioData.precio : null,
+        'precio_seasonal':          precioData && precioData.seasonal ? precioData.seasonal : null,
         'Tipo contrato':            String(r['Tipo contrato']||''),
         'tope_anual_mwh':           topeData ? topeData.vol : null,
       });
@@ -794,7 +846,11 @@ function render(){
   document.getElementById('tableBody').innerHTML=filtered.slice(start,end).map(r=>{
     const tipo=r['TIPO RECURSO'];
     const tc=tipo==='Renovable'?'tag-r':tipo==='No Renovable'?'tag-nr':'tag-na';
-    const pr=r.precio_usd!=null?(typeof r.precio_usd==='number'?r.precio_usd.toFixed(1)+' U$S':String(r.precio_usd)):'—';
+    const isSeasonal = r.precio_seasonal && r.precio_seasonal.length > 0;
+    const pr = isSeasonal
+      ? '<span class="precio-seasonal" title="">por temporada</span>'
+      : r.precio_usd!=null?(typeof r.precio_usd==='number'?r.precio_usd.toFixed(1)+' U$S':String(r.precio_usd)):'—';
+    const seasonalTooltip = isSeasonal ? r.precio_seasonal.join('\n') : '';
     const su=r['Suministro / grupo dem.']||'';
     const vn=CUIT_NAMES[r['Vendedor']]||r['Vendedor']||'—';
     const v=r.tope_anual_mwh;
@@ -810,7 +866,9 @@ function render(){
       +'<td><span class="tag '+tc+'">'+(tipo||'—')+'</span></td>'
       +'<td class="mono">'+r.inicio_str+'</td>'
       +'<td class="mono">'+r.fin_str+'</td>'
-      +'<td class="mono">'+pr+'</td>'
+      +(isSeasonal
+        ? '<td class="mono"><span class="precio-seasonal" data-tooltip="'+seasonalTooltip.replace(/"/g,\'&quot;\')+'">por temporada</span></td>'
+        : '<td class="mono">'+pr+'</td>')
       +'<td>'+volCell+'</td>'
       +'<td style="font-size:11px;color:var(--text2)">'+r['Tipo contrato']+'</td>'
       +'</tr>';
