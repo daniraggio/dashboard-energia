@@ -267,7 +267,9 @@ const BLUE='#2155a3',AMBER='#b06a10',GRAY='#ccc9be';
 const BA='rgba(33,85,163,.75)',AA='rgba(176,106,16,.7)';
 
 // ── Carga desde GitHub ────────────────────────────────────────────────────────
-const GITHUB_BASE = 'https://raw.githubusercontent.com/daniraggio/dashboard-energia/main/data/';
+// GitHub API — evita problemas de CORS con raw.githubusercontent.com
+const GITHUB_REPO  = 'daniraggio/dashboard-energia';
+const GITHUB_BRANCH = 'main';
 const EXCEL_FILES = {
   contratos:   'CONTRATOS.xlsx',
   topes:       'TOPES.xlsx',
@@ -290,10 +292,21 @@ function showLoadingError(msg){
 }
 
 async function fetchExcel(filename){
-  const url = GITHUB_BASE + filename;
-  const resp = await fetch(url);
-  if(!resp.ok) throw new Error('No se pudo descargar ' + filename + ' (HTTP ' + resp.status + ')');
-  const buf = await resp.arrayBuffer();
+  // Try raw.githubusercontent.com first, fall back to GitHub API (base64)
+  const rawUrl = 'https://raw.githubusercontent.com/' + GITHUB_REPO + '/' + GITHUB_BRANCH + '/data/' + filename;
+  const apiUrl = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/data/' + filename + '?ref=' + GITHUB_BRANCH;
+
+  let buf;
+  try {
+    const resp = await fetch(rawUrl);
+    if(!resp.ok) throw new Error('raw failed');
+    buf = await resp.arrayBuffer();
+  } catch(e) {
+    // Fallback: GitHub API returns base64-encoded content
+    const resp = await fetch(apiUrl, {headers:{'Accept':'application/vnd.github.v3.raw'}});
+    if(!resp.ok) throw new Error('No se pudo descargar ' + filename + ' (HTTP ' + resp.status + ')');
+    buf = await resp.arrayBuffer();
+  }
   return XLSX.read(new Uint8Array(buf), {type:'array'});
 }
 
@@ -539,7 +552,13 @@ async function loadFromGitHub(){
 }
 
 // Ejecutar al cargar la página
-window.addEventListener('DOMContentLoaded', loadFromGitHub);
+window.addEventListener('DOMContentLoaded', () => {
+  // Timeout de 45 segundos
+  const timeout = setTimeout(() => {
+    showLoadingError('La carga tardó demasiado. Verificá tu conexión y que el repo sea público, luego recargá la página.');
+  }, 45000);
+  loadFromGitHub().finally(() => clearTimeout(timeout));
+});
 
 const CUIT_NAMES={"30-51688824-1": "P.Eol. Vientos Olavarría", "30-52278060-6": "P.Eol. Aluar I", "30-52655265-9": "Pampa Energía", "30-52671272-9": "LDC Argentina", "30-53378967-2": "Genneia", "30-55081599-7": "Eol. Buena Ventura", "30-62971795-8": "Helios Santa Rosa 2", "30-62982706-0": "Agua del Cajón", "30-65225424-8": "Costanera", "30-65599219-3": "Dock Sud", "30-66346111-3": "AES Paraná", "30-66523411-4": "Genneia", "30-67642119-6": "Hid. Los Nihuiles", "30-69224359-1": "Termoandes", "30-69470158-9": "Potrerillos", "30-70050075-2": "Solar de Los Llanos", "30-70083497-9": "Pampa Energía CC", "30-70882520-0": "Solar Anchipurac", "30-70969733-8": "Vientos Neuquinos I", "30-70982458-5": "Solar Victorica", "30-70983613-3": "Eol. Diadema 1", "30-71120405-5": "FV C.Honda + La Rioja", "30-71132206-6": "Genneia", "30-71158444-3": "Pampa Energía", "30-71242276-5": "Eol. Bicentenario 2", "30-71312200-5": "Vientos Neuquinos I", "30-71412830-9": "YPF Energía Eléctrica", "30-71415512-8": "P.S. Pampa del Infierno", "30-71474937-0": "PS V. María del Río Seco", "30-71518744-9": "Eol. La Energética", "30-71526384-6": "PS Cura Brochero Ampl.", "30-71534545-1": "Raizen", "30-71536578-9": "PS Amanecer IV", "30-71539912-8": "Eol. 3 Picos", "30-71556280-0": "Vientos Olavarría", "30-71556281-9": "Genoveva+Manq+Ol", "30-71559121-5": "Solar Villa Ángela 1", "30-71572949-7": "Solar P. Los Llanos", "30-71592816-3": "PE San Luis Norte", "30-71595899-2": "FV La Cumbre 2", "30-71609599-8": "Eol. La Rinconada", "30-71609845-8": "FV La Cumbre 2", "30-71610373-7": "PS Cura Brochero", "30-71610419-9": "PS V. María del Río Seco M.", "30-71617892-3": "Eol. Cañadón León", "30-71644849-1": "Genneia", "30-71729321-1": "PS La Salvación", "30-71765521-0": "Solar El Quemado", "30-71853263-5": "Genneia", "30-71868101-0": "Hid. El Chocón", "30-71868196-7": "Hid. Alicurá", "30-71869033-8": "Hid. Cerros Colorados", "30-71870493-2": "Hid. Piedra del Águila", "30-71872506-9": "Solar La Perla", "30-71882580-2": "Solar El Quemado", "30-71918704-4": "Hid. Las Maderas", "30-99902748-9": "EPEC", "33-61597477-9": "Céspedes", "33-65030549-9": "Central Puerto", "33-68735847-9": "Hid. Reyes", "33-70726132-9": "Solar Villa Ángela 1", "33-71194489-9": "Roca", "33-71869886-9": "Genneia"};
 const BY_YEAR_BASE=[{y:2025,r:189,nr:23},{y:2026,r:352,nr:178},{y:2027,r:185,nr:405},{y:2028,r:99,nr:11},{y:2029,r:205,nr:22},{y:2030,r:284,nr:7},{y:2031,r:29,nr:3},{y:2032,r:14,nr:0},{y:2033,r:34,nr:0},{y:2034,r:90,nr:1},{y:2035,r:32,nr:2},{y:2036,r:4,nr:0},{y:2039,r:51,nr:0},{y:2040,r:5,nr:0},{y:2053,r:7,nr:0}];
