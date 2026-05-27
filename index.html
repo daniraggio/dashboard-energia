@@ -378,12 +378,11 @@ async function loadFromGitHub(){
       if(numericRows.length > 1 && distinctPrices.size > 1 && hasFin){
         // Build tooltip text: show each period
         const lines = numericRows.map(r => {
-          const ini = String(r.ini).slice(0,7); // YYYY-MM
-          const fin = String(r.fin).slice(0,7);
-          const iniLabel = ini.length >= 7 ? MESES_ES[parseInt(ini.slice(5,7))-1]+' '+ini.slice(0,4) : ini;
-          const finLabel = fin.length >= 7 ? MESES_ES[parseInt(fin.slice(5,7))-1]+' '+fin.slice(0,4) : (fin ? fin : '→');
-          return iniLabel + (finLabel ? ' – ' + finLabel : '') + ': ' + r.precio.toFixed(1) + ' U$S';
-        });
+          const iniDate = parseDate(r.ini);
+          const finDate = parseDate(r.fin);
+          const iniLabel = iniDate ? MESES_ES[iniDate.getMonth()]+' '+iniDate.getFullYear() : String(r.ini).slice(0,7);
+          const finLabel = finDate ? MESES_ES[finDate.getMonth()]+' '+finDate.getFullYear() : '→';
+          return iniLabel + ' – ' + finLabel + ': ' + r.precio.toFixed(1) + ' U$S';       });
         precios[nro] = {precio: 'por temporada', seasonal: lines};
       } else {
         // Single price: use most recent
