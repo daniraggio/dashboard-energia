@@ -84,21 +84,6 @@
     background:var(--blue-bg);color:var(--blue-text);
     padding:2px 6px;border-radius:4px;font-weight:600;
     cursor:default;border-bottom:1px dashed var(--blue);
-    position:relative;
-  }
-  .precio-seasonal::before{
-    content:'↕';font-size:9px;opacity:.7;
-  }
-  /* Tooltip */
-  .precio-seasonal[data-tooltip]:hover::after{
-    content:attr(data-tooltip);
-    position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
-    background:#1a1916;color:#fff;
-    font-size:11px;font-family:'IBM Plex Mono',monospace;font-weight:400;
-    white-space:pre;padding:8px 12px;border-radius:6px;
-    box-shadow:0 4px 16px rgba(0,0,0,.2);
-    z-index:100;pointer-events:none;
-    min-width:200px;
   }
   .precio-seasonal[data-tooltip]:hover::before{
     content:'↕';
@@ -158,6 +143,8 @@
   <div style="font-size:14px;color:#6b6860" id="loadingMsg">Cargando datos desde GitHub...</div>
   <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 </div>
+<div id="seasonalTooltip" style="display:none;position:fixed;z-index:9998;background:#1a1916;color:#fff;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 14px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.3);pointer-events:none;white-space:pre;line-height:1.7;max-width:320px"></div>
+
 
 <div class="section-label">Métricas generales</div>
 <div class="kpi-row">
@@ -526,6 +513,11 @@ async function loadFromGitHub(){
 
     // ── Inject into ALL ──
     ALL.push(...records);
+    // Populate seasonal price map for tooltips
+    records.forEach(r => {
+      if(r.precio_seasonal && r.precio_seasonal.length)
+        seasonalMap[r['Nro contrato']] = r.precio_seasonal;
+    });
 
     // ── Update EXISTING_IDS ──
     EXISTING_IDS.clear();
@@ -866,10 +858,7 @@ function render(){
     const tipo=r['TIPO RECURSO'];
     const tc=tipo==='Renovable'?'tag-r':tipo==='No Renovable'?'tag-nr':'tag-na';
     const isSeasonal = r.precio_seasonal && r.precio_seasonal.length > 0;
-    const pr = isSeasonal
-      ? '<span class="precio-seasonal" title="">por temporada</span>'
-      : r.precio_usd!=null?(typeof r.precio_usd==='number'?r.precio_usd.toFixed(1)+' U$S':String(r.precio_usd)):'—';
-    const seasonalTooltip = isSeasonal ? r.precio_seasonal.join('\n') : '';
+    const pr = r.precio_usd!=null?(typeof r.precio_usd==='number'?r.precio_usd.toFixed(1)+' U$S':String(r.precio_usd)):'—';
     const su=r['Suministro / grupo dem.']||'';
     const vn=CUIT_NAMES[r['Vendedor']]||r['Vendedor']||'—';
     const v=r.tope_anual_mwh;
@@ -877,6 +866,9 @@ function render(){
     const volCell=v!=null
       ?'<div class="vol-bar-wrap"><div class="vol-bar" style="width:'+barW+'px"></div><span class="vol-txt">'+fmtMwh(v)+'</span></div>'
       :'<span class="vol-txt" style="color:var(--text3)">—</span>';
+    const precioCell = isSeasonal
+      ? '<td class="mono"><span class="precio-seasonal" data-sid="'+r['Nro contrato']+'">↕ por temporada</span></td>'
+      : '<td class="mono">'+pr+'</td>';
     return '<tr>'
       +'<td class="mono">'+r['Nro contrato']+'</td>'
       +'<td title="'+su.replace(/"/g,'&quot;')+'">'+(su.length>34?su.slice(0,34)+'…':su)+'</td>'
@@ -885,9 +877,7 @@ function render(){
       +'<td><span class="tag '+tc+'">'+(tipo||'—')+'</span></td>'
       +'<td class="mono">'+r.inicio_str+'</td>'
       +'<td class="mono">'+r.fin_str+'</td>'
-      +(isSeasonal
-        ? '<td class="mono"><span class="precio-seasonal" data-tooltip="'+seasonalTooltip.replace(/"/g,\'&quot;\')+'">por temporada</span></td>'
-        : '<td class="mono">'+pr+'</td>')
+      +precioCell
       +'<td>'+volCell+'</td>'
       +'<td style="font-size:11px;color:var(--text2)">'+r['Tipo contrato']+'</td>'
       +'</tr>';
@@ -1375,6 +1365,33 @@ function initNewContractsUI(){
   main.appendChild(div);
   initNewContractsUI();
 })();
+
+// ── Seasonal price tooltip ────────────────────────────────────────────────────
+const seasonalTT = document.getElementById('seasonalTooltip');
+const seasonalMap = {}; // nro -> lines array, populated after load
+
+document.addEventListener('mouseover', function(e){
+  const el = e.target.closest('.precio-seasonal');
+  if(!el) return;
+  const nro = el.dataset.sid;
+  const lines = seasonalMap[nro];
+  if(!lines || !lines.length) return;
+  seasonalTT.textContent = lines.join('\n');
+  seasonalTT.style.display = 'block';
+});
+document.addEventListener('mousemove', function(e){
+  if(seasonalTT.style.display === 'none') return;
+  const x = e.clientX + 14;
+  const y = e.clientY - 10;
+  const tw = seasonalTT.offsetWidth;
+  const th = seasonalTT.offsetHeight;
+  seasonalTT.style.left = (x + tw > window.innerWidth ? x - tw - 28 : x) + 'px';
+  seasonalTT.style.top  = (y + th > window.innerHeight ? y - th : y) + 'px';
+});
+document.addEventListener('mouseout', function(e){
+  if(e.target.closest('.precio-seasonal')) return;
+  seasonalTT.style.display = 'none';
+});
 </script>
 </body>
 </html>
