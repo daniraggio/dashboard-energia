@@ -350,6 +350,29 @@ async function loadFromGitHub(){
     const today = new Date();
     today.setHours(0,0,0,0);
 
+    // Robust date parser: handles JS Date objects, Excel serial numbers, and strings
+    function parseDate(raw){
+      if(!raw) return null;
+      if(raw instanceof Date) return isNaN(raw) ? null : raw;
+      // Excel serial number (e.g. 46000)
+      if(typeof raw === 'number'){
+        // Excel epoch: Jan 1 1900 = 1 (with leap year bug: add 1)
+        const d = new Date(Math.round((raw - 25569) * 86400 * 1000));
+        return isNaN(d) ? null : d;
+      }
+      // String: try direct parse first
+      const s = String(raw).trim();
+      let d = new Date(s);
+      if(!isNaN(d)) return d;
+      // Try DD/MM/YYYY
+      const mDMY = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if(mDMY) { d = new Date(+mDMY[3], +mDMY[2]-1, +mDMY[1]); return isNaN(d)?null:d; }
+      // Try YYYY/MM/DD
+      const mYMD = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+      if(mYMD) { d = new Date(+mYMD[1], +mYMD[2]-1, +mYMD[3]); return isNaN(d)?null:d; }
+      return null;
+    }
+
     // ── Merge into records ──
     const records = [];
     contratos.forEach(r => {
@@ -358,9 +381,8 @@ async function loadFromGitHub(){
 
       const finRaw = r['Fin'];
       const iniRaw = r['Inicio'];
-      let finDate, iniDate;
-      try { finDate = finRaw instanceof Date ? finRaw : new Date(finRaw); } catch(e){ return; }
-      try { iniDate = iniRaw instanceof Date ? iniRaw : new Date(iniRaw); } catch(e){ iniDate = null; }
+      const finDate = parseDate(finRaw);
+      const iniDate = parseDate(iniRaw);
       if(!finDate || isNaN(finDate)) return;
       if(finDate < today) return; // solo vigentes
 
@@ -800,7 +822,7 @@ function monthLabel(dateStr){
 // Parsear un workbook XLSX y extraer contratos
 function parseXLSXContracts(wb){
   const sheet = wb.Sheets[wb.SheetNames[0]];
-  const json  = XLSX.utils.sheet_to_json(sheet, {defval:null});
+  const json  = XLSX.utils.sheet_to_json(sheet, {defval:null, raw:false, dateNF:'DD/MM/YYYY'});
   return json;
 }
 
