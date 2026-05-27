@@ -285,8 +285,13 @@ function safeFloat(x){
 
 function parsePrice(s){
   if(!s) return null;
-  const m = String(s).match(/(\d+\.?\d*)\s*U\$S/);
-  return m ? parseFloat(m[1]) : null;
+  const str = String(s).trim();
+  // Standard numeric: "60.5 U$S/MWh" or "60,5 U$S/MWh"
+  const m = str.match(/([\d]+[,.]?[\d]*)\s*U\$S/);
+  if(m) return parseFloat(m[1].replace(',','.'));
+  // DTE-based or other text price — return as string for display
+  if(str.length > 0) return str;
+  return null;
 }
 
 async function loadFromGitHub(){
@@ -302,6 +307,9 @@ async function loadFromGitHub(){
 
     setLoadingMsg('Descargando PARÁMETROS_VARIABLES.xlsx...');
     const wbParams = await fetchExcel(EXCEL_FILES.params);
+
+    setLoadingMsg('Descargando CARACTERISTICAS.xlsx...');
+    const wbCaract = await fetchExcel(EXCEL_FILES.caract);
 
     setLoadingMsg('Procesando datos...');
 
@@ -333,7 +341,7 @@ async function loadFromGitHub(){
       }
     });
 
-    // ── Parse topes ──
+    // ── Parse topes from TOPES.xlsx ──
     const topeRows = parseColumn(wbTopes);
     const topes = {};
     topeRows.forEach(r => {
@@ -345,6 +353,49 @@ async function loadFromGitHub(){
         topes[nro] = {vol: val, _ini: r['Fecha desde']||''};
       }
     });
+
+    // ── Parse topes from CARACTERISTICAS.xlsx (fills gaps + monthly breakdown) ──
+    function parseMwh(s){
+      if(!s) return null;
+      const m = String(s).match(/([\d,.]+)\s*MWh/i);
+      return m ? parseFloat(m[1].replace(',','.')) : null;
+    }
+    function parseTopeMensual(s){
+      if(!s) return null;
+      const str = String(s).trim();
+      // Monthly breakdown: "Ene:2200,00; Feb:1900,00; ..."
+      if(str.includes(':')){
+        const nums = [...str.matchAll(/[\w]+:([\d,.]+)/g)].map(m=>parseFloat(m[1].replace(',','.')));
+        if(nums.length > 0){
+          const total = nums.reduce((a,b)=>a+b, 0);
+          return total > 0 ? Math.round(total*10)/10 : null;
+        }
+      }
+      // Single value: "2000 MWh"
+      return parseMwh(str);
+    }
+    const caractRows = parseColumn(wbCaract);
+    // First pass: tope mensual from CARACTERISTICAS
+    const caractMens = {}, caractAnual = {};
+    caractRows.forEach(r => {
+      const nro  = String(r['Nro contrato']||'').padStart(6,'0');
+      const car  = String(r['Característica']||'').toLowerCase();
+      const ini  = r['Inicio']||'';
+      if(car.includes('mensual')){
+        const val = parseTopeMensual(r['Valor']);
+        if(val && (!caractMens[nro] || ini > (caractMens[nro]._ini||'')))
+          caractMens[nro] = {vol: val, _ini: ini};
+      } else if(car.includes('anual')){
+        const val = parseMwh(r['Valor']);
+        if(val && (!caractAnual[nro] || ini > (caractAnual[nro]._ini||'')))
+          caractAnual[nro] = {vol: val, _ini: ini};
+      }
+    });
+    // Merge: TOPES > CARACTERISTICAS Anual > CARACTERISTICAS Mensual
+    // Start with mensual, overwrite with anual, then overwrite with TOPES
+    Object.entries(caractMens).forEach(([nro, d]) => { if(!topes[nro]) topes[nro] = d; });
+    Object.entries(caractAnual).forEach(([nro, d]) => { if(!topes[nro] || d.vol > 0) topes[nro] = d; });
+    // TOPES already has priority since we only fill gaps above
 
     // ── Build today date ──
     const today = new Date();
@@ -676,7 +727,7 @@ function applyFilters(){
     if(tc&&r['Tipo contrato']!==tc)return false;
     if(precio){
       if(precio==='null'){if(r.precio_usd!=null)return false;}
-      else{const[lo,hi]=precio.split('-').map(Number);if(r.precio_usd==null||r.precio_usd<lo||r.precio_usd>=hi)return false;}
+      else{const[lo,hi]=precio.split('-').map(Number);const pv=typeof r.precio_usd==='number'?r.precio_usd:null;if(pv==null||pv<lo||pv>=hi)return false;}
     }
     if(vol){
       if(vol==='null'){if(r.tope_anual_mwh!=null)return false;}
@@ -743,7 +794,7 @@ function render(){
   document.getElementById('tableBody').innerHTML=filtered.slice(start,end).map(r=>{
     const tipo=r['TIPO RECURSO'];
     const tc=tipo==='Renovable'?'tag-r':tipo==='No Renovable'?'tag-nr':'tag-na';
-    const pr=r.precio_usd!=null?r.precio_usd.toFixed(1)+' U$S':'—';
+    const pr=r.precio_usd!=null?(typeof r.precio_usd==='number'?r.precio_usd.toFixed(1)+' U$S':String(r.precio_usd)):'—';
     const su=r['Suministro / grupo dem.']||'';
     const vn=CUIT_NAMES[r['Vendedor']]||r['Vendedor']||'—';
     const v=r.tope_anual_mwh;
