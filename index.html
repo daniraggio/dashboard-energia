@@ -10,13 +10,13 @@
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
-    --bg:#f4f3ef;--surface:#fff;--surface2:#f9f8f5;
-    --border:#e2e0d8;--border2:#ccc9be;
-    --text:#1a1916;--text2:#6b6860;--text3:#9c9a93;
-    --blue:#2155a3;--blue-bg:#edf2fc;--blue-text:#1a4282;
-    --amber:#b06a10;--amber-bg:#fdf3e3;--amber-text:#8a5008;
-    --green:#276940;--green-bg:#e8f5ee;--green-text:#1d5131;
-    --red:#b52a2a;--red-bg:#fdeaea;--gray-bg:#eceae3;
+    --bg:#0a0e1a;--surface:#11172a;--surface2:#161d33;
+    --border:#232b45;--border2:#3a4361;
+    --text:#e8eaf0;--text2:#8b93ab;--text3:#5a6280;
+    --blue:#4a9eff;--blue-bg:#16243f;--blue-text:#7ab8ff;
+    --amber:#f5a623;--amber-bg:#33270f;--amber-text:#ffc266;
+    --green:#34d399;--green-bg:#103324;--green-text:#6ee7b7;
+    --red:#f87171;--red-bg:#3a1c1c;--gray-bg:#1c2336;
     --radius:8px;--radius-lg:12px;
   }
   body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
@@ -33,7 +33,7 @@
   .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 13px}
   .kpi-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
   .kpi-value{font-size:24px;font-weight:300;letter-spacing:-.03em;font-family:'IBM Plex Mono',monospace}
-  .kpi-value.c-blue{color:var(--blue)} .kpi-value.c-green{color:var(--green)} .kpi-value.c-amber{color:var(--amber)} .kpi-value.c-red{color:var(--red)} .kpi-value.c-purple{color:#6a3db5}
+  .kpi-value.c-blue{color:var(--blue)} .kpi-value.c-green{color:var(--green)} .kpi-value.c-amber{color:var(--amber)} .kpi-value.c-red{color:var(--red)} .kpi-value.c-purple{color:#b794f6}
   .kpi-sub{font-size:11px;color:var(--text3);margin-top:3px}
   .charts-row{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-bottom:12px}
   .charts-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
@@ -117,9 +117,9 @@
   .file-chip button{background:none;border:none;cursor:pointer;color:inherit;font-size:13px;line-height:1;padding:0;margin-left:2px;opacity:.6}
   .file-chip button:hover{opacity:1}
   .new-filter-grid{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--surface2);align-items:end}
-  .tag-new{background:#f0e6ff;color:#5c2d9c;display:inline-block;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;letter-spacing:.02em}
+  .tag-new{background:#2d2147;color:#c4b5fd;display:inline-block;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;letter-spacing:.02em}
   .new-contracts-kpi{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2)}
-  .new-contracts-kpi strong{font-size:20px;font-weight:300;font-family:'IBM Plex Mono',monospace;color:#5c2d9c}
+  .new-contracts-kpi strong{font-size:20px;font-weight:300;font-family:'IBM Plex Mono',monospace;color:#c4b5fd}
   .empty-new{padding:40px;text-align:center;color:var(--text3);font-size:13px}
   .empty-new svg{width:32px;height:32px;fill:var(--border2);margin:0 auto 8px;display:block}
 </style>
@@ -138,12 +138,12 @@
   <div class="header-date">Actualizado: 24/04/2026</div>
 </header>
 <main class="main">
-<div id="loadingOverlay" style="position:fixed;inset:0;background:rgba(244,243,239,.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:'IBM Plex Sans',sans-serif">
-  <div style="width:44px;height:44px;border:3px solid #e2e0d8;border-top-color:#2155a3;border-radius:50%;animation:spin .8s linear infinite"></div>
-  <div style="font-size:14px;color:#6b6860" id="loadingMsg">Cargando datos desde GitHub...</div>
+<div id="loadingOverlay" style="position:fixed;inset:0;background:rgba(10,14,26,.94);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:'IBM Plex Sans',sans-serif">
+  <div style="width:44px;height:44px;border:3px solid #232b45;border-top-color:#4a9eff;border-radius:50%;animation:spin .8s linear infinite"></div>
+  <div style="font-size:14px;color:#8b93ab" id="loadingMsg">Cargando datos desde GitHub...</div>
   <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 </div>
-<div id="seasonalTooltip" style="display:none;position:fixed;z-index:9998;background:#1a1916;color:#fff;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 14px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.3);pointer-events:none;white-space:pre;line-height:1.7;max-width:320px"></div>
+<div id="seasonalTooltip" style="display:none;position:fixed;z-index:9998;background:#1f2940;color:#e8eaf0;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 14px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.5);border:1px solid #2e3a5c;pointer-events:none;white-space:pre;line-height:1.7;max-width:320px"></div>
 
 
 <div class="section-label">Métricas generales</div>
@@ -162,8 +162,8 @@
     <div class="chart-subtitle" id="chartAnioSubtitle">Cantidad según año de fin, por tipo de recurso</div>
     <span class="chart-badge" id="badgeAnio">filtrado</span>
     <div class="legend">
-      <div class="legend-item"><span class="legend-swatch" style="background:#2155a3"></span>Renovable</div>
-      <div class="legend-item"><span class="legend-swatch" style="background:#b06a10"></span>No renovable</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#4a9eff"></span>Renovable</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#f5a623"></span>No renovable</div>
     </div>
     <div style="position:relative;width:100%;height:210px"><canvas id="chartAnio" style="cursor:default"></canvas></div>
   </div>
@@ -172,8 +172,8 @@
     <div class="chart-subtitle">Contratos con precio por rango (U$S/MWh)</div>
     <span class="chart-badge" id="badgePrecio">filtrado</span>
     <div class="legend">
-      <div class="legend-item"><span class="legend-swatch" style="background:#2155a3"></span>Renovable</div>
-      <div class="legend-item"><span class="legend-swatch" style="background:#b06a10"></span>No renovable</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#4a9eff"></span>Renovable</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#f5a623"></span>No renovable</div>
     </div>
     <div style="position:relative;width:100%;height:210px"><canvas id="chartPrecios"></canvas></div>
   </div>
@@ -186,9 +186,9 @@
     <div class="donut-wrap" style="margin-top:10px">
       <div style="position:relative;width:140px;height:140px;flex-shrink:0"><canvas id="chartDonut"></canvas></div>
       <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
-        <div><div class="legend-item" style="margin-bottom:2px"><span class="legend-swatch" style="background:#2155a3"></span><strong>Renovable</strong></div><div style="font-size:20px;font-weight:300;font-family:'IBM Plex Mono',monospace;margin-left:15px"><span id="ds-r">1.585</span> <span style="font-size:12px;color:var(--text3)" id="ds-rp">69%</span></div></div>
-        <div><div class="legend-item" style="margin-bottom:2px"><span class="legend-swatch" style="background:#b06a10"></span><strong>No renovable</strong></div><div style="font-size:20px;font-weight:300;font-family:'IBM Plex Mono',monospace;margin-left:15px"><span id="ds-nr">652</span> <span style="font-size:12px;color:var(--text3)" id="ds-nrp">28%</span></div></div>
-        <div><div class="legend-item" style="margin-bottom:2px"><span class="legend-swatch" style="background:#ccc9be"></span><strong>Sin datos</strong></div><div style="font-size:20px;font-weight:300;font-family:'IBM Plex Mono',monospace;margin-left:15px"><span id="ds-na">63</span> <span style="font-size:12px;color:var(--text3)" id="ds-nap">3%</span></div></div>
+        <div><div class="legend-item" style="margin-bottom:2px"><span class="legend-swatch" style="background:#4a9eff"></span><strong>Renovable</strong></div><div style="font-size:20px;font-weight:300;font-family:'IBM Plex Mono',monospace;margin-left:15px"><span id="ds-r">1.585</span> <span style="font-size:12px;color:var(--text3)" id="ds-rp">69%</span></div></div>
+        <div><div class="legend-item" style="margin-bottom:2px"><span class="legend-swatch" style="background:#f5a623"></span><strong>No renovable</strong></div><div style="font-size:20px;font-weight:300;font-family:'IBM Plex Mono',monospace;margin-left:15px"><span id="ds-nr">652</span> <span style="font-size:12px;color:var(--text3)" id="ds-nrp">28%</span></div></div>
+        <div><div class="legend-item" style="margin-bottom:2px"><span class="legend-swatch" style="background:#3a4361"></span><strong>Sin datos</strong></div><div style="font-size:20px;font-weight:300;font-family:'IBM Plex Mono',monospace;margin-left:15px"><span id="ds-na">63</span> <span style="font-size:12px;color:var(--text3)" id="ds-nap">3%</span></div></div>
       </div>
     </div>
   </div>
@@ -250,8 +250,8 @@
 </main>
 
 <script>
-const BLUE='#2155a3',AMBER='#b06a10',GRAY='#ccc9be';
-const BA='rgba(33,85,163,.75)',AA='rgba(176,106,16,.7)';
+const BLUE='#4a9eff',AMBER='#f5a623',GRAY='#3a4361';
+const BA='rgba(74,158,255,.75)',AA='rgba(245,166,35,.7)';
 
 // ── Carga desde GitHub ────────────────────────────────────────────────────────
 // GitHub API — evita problemas de CORS con raw.githubusercontent.com
@@ -271,10 +271,10 @@ function showLoadingError(msg){
   const el = document.getElementById('loadingOverlay');
   el.innerHTML = '<div style="text-align:center;padding:32px;font-family:IBM Plex Sans,sans-serif">'
     + '<div style="font-size:32px;margin-bottom:12px">⚠️</div>'
-    + '<div style="font-size:15px;font-weight:600;color:#1a1916;margin-bottom:8px">Error al cargar los datos</div>'
-    + '<div style="font-size:13px;color:#6b6860;max-width:400px;margin-bottom:20px">' + msg + '</div>'
+    + '<div style="font-size:15px;font-weight:600;color:#e8eaf0;margin-bottom:8px">Error al cargar los datos</div>'
+    + '<div style="font-size:13px;color:#8b93ab;max-width:400px;margin-bottom:20px">' + msg + '</div>'
     + '<button onclick="document.getElementById(\'loadingOverlay\').style.display=\'none\'" '
-    + 'style="font-family:IBM Plex Sans,sans-serif;font-size:13px;padding:7px 18px;border:1px solid #ccc9be;border-radius:6px;background:#fff;cursor:pointer">Cerrar</button>'
+    + 'style="font-family:IBM Plex Sans,sans-serif;font-size:13px;padding:7px 18px;border:1px solid #3a4361;border-radius:6px;background:#161d33;color:#e8eaf0;cursor:pointer">Cerrar</button>'
     + '</div>';
 }
 
@@ -564,7 +564,12 @@ function fmtMwh(v){
   return v.toLocaleString('es',{maximumFractionDigits:1});
 }
 
-const CO={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{bodyFont:{family:'IBM Plex Mono'}}}};
+// Chart.js dark theme defaults
+Chart.defaults.color = '#8b93ab';
+Chart.defaults.borderColor = '#232b45';
+Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
+
+const CO={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1f2940',titleColor:'#e8eaf0',bodyColor:'#e8eaf0',borderColor:'#2e3a5c',borderWidth:1,bodyFont:{family:'IBM Plex Mono'}}}};
 let activeBarLabel=null; // tracks clicked month bar
 let zoomedYear=null;     // tracks clicked year bar (zoom into months)
 
@@ -588,7 +593,7 @@ const chartAnio=new Chart(document.getElementById('chartAnio'),{type:'bar',data:
       chartAnio.data.datasets.forEach(ds=>{
         ds.backgroundColor=chartAnio.data.labels.map((l,i)=>{
           const base=ds.label==='Renovable'?BA:AA;
-          return i===els[0].index?base:'rgba(180,180,180,.3)';
+          return i===els[0].index?base:'rgba(90,98,128,.35)';
         });
       });
       chartAnio.update('none');
@@ -657,7 +662,7 @@ function updateCharts(data){
       chartAnio.data.datasets.forEach(ds=>{
         ds.backgroundColor=chartAnio.data.labels.map((l,i)=>{
           const base=ds.label==='Renovable'?BA:AA;
-          return l===activeBarLabel?base:'rgba(180,180,180,.3)';
+          return l===activeBarLabel?base:'rgba(90,98,128,.35)';
         });
       });
     } else {
@@ -681,7 +686,7 @@ function updateCharts(data){
   const PRICE_MAP_R={'0-30':'< 30','30-50':'30–50','50-60':'50–60','60-70':'60–70','70-80':'70–80','80-9999':'80–100'};
   const activePLabel=PRICE_MAP_R[activePrecio]||null;
   chartPrecios.data.datasets.forEach(ds=>{
-    ds.backgroundColor=activePLabel?pb.map(b=>b.r===activePLabel?(ds.label==='Renovable'?BA:AA):'rgba(180,180,180,.3)'):(ds.label==='Renovable'?BA:AA);
+    ds.backgroundColor=activePLabel?pb.map(b=>b.r===activePLabel?(ds.label==='Renovable'?BA:AA):'rgba(90,98,128,.35)'):(ds.label==='Renovable'?BA:AA);
   });
   chartPrecios.update('none');
   let dR=0,dNR=0,dNA=0;
@@ -692,7 +697,7 @@ function updateCharts(data){
   const activeTipo=document.getElementById('fTipo').value;
   const donutColors=[BLUE,AMBER,GRAY];
   chartDonut.data.datasets[0].backgroundColor=activeTipo
-    ?['Renovable','No Renovable','Sin datos'].map((l,i)=>l===activeTipo?donutColors[i]:'rgba(180,180,180,.3)')
+    ?['Renovable','No Renovable','Sin datos'].map((l,i)=>l===activeTipo?donutColors[i]:'rgba(90,98,128,.35)')
     :donutColors;
   chartDonut.update('none');
   document.getElementById('ds-r').textContent=dR.toLocaleString('es');
@@ -710,7 +715,7 @@ function updateCharts(data){
   const activeVend=document.getElementById('fVendedor').value;
   const activeVendName=activeVend?CUIT_NAMES[activeVend]||activeVend:null;
   chartVend.data.datasets[0].backgroundColor=activeVendName
-    ?chartVend.data.labels.map(l=>l===activeVendName?BA:'rgba(180,180,180,.3)')
+    ?chartVend.data.labels.map(l=>l===activeVendName?BA:'rgba(90,98,128,.35)')
     :BA;
   chartVend.update('none');
   const prices=data.map(r=>r.precio_usd).filter(v=>typeof v==='number').sort((a,b)=>a-b);
@@ -1049,7 +1054,7 @@ function updateNewNote(){
     el.style.color='var(--text3)';
   } else {
     el.textContent=`${newContracts.length} contratos nuevos detectados`;
-    el.style.color='#5c2d9c';
+    el.style.color='#c4b5fd';
   }
   document.getElementById('uploadPanel').classList.toggle('has-files', newContracts.length>0);
 }
