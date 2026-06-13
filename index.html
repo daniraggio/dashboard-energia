@@ -674,7 +674,7 @@ function updateCharts(data){
   }
   chartAnio.update('none');
   const pb=PRICE_BINS.map(b=>({r:b[2],ren:0,nor:0}));
-  data.forEach(r=>{if(r.precio_usd==null)return;for(let i=0;i<PRICE_BINS.length;i++){if(r.precio_usd>=PRICE_BINS[i][0]&&r.precio_usd<PRICE_BINS[i][1]){if(r['TIPO RECURSO']==='Renovable')pb[i].ren++;else if(r['TIPO RECURSO']==='No Renovable')pb[i].nor++;break;}}});
+  data.forEach(r=>{if(typeof r.precio_usd!=='number')return;for(let i=0;i<PRICE_BINS.length;i++){if(r.precio_usd>=PRICE_BINS[i][0]&&r.precio_usd<PRICE_BINS[i][1]){if(r['TIPO RECURSO']==='Renovable')pb[i].ren++;else if(r['TIPO RECURSO']==='No Renovable')pb[i].nor++;break;}}});
   chartPrecios.data.labels=pb.map(b=>b.r);chartPrecios.data.datasets[0].data=pb.map(b=>b.ren);chartPrecios.data.datasets[1].data=pb.map(b=>b.nor);
   // highlight active price filter
   const activePrecio=document.getElementById('fPrecio').value;
@@ -713,7 +713,7 @@ function updateCharts(data){
     ?chartVend.data.labels.map(l=>l===activeVendName?BA:'rgba(180,180,180,.3)')
     :BA;
   chartVend.update('none');
-  const prices=data.map(r=>r.precio_usd).filter(v=>v!=null).sort((a,b)=>a-b);
+  const prices=data.map(r=>r.precio_usd).filter(v=>typeof v==='number').sort((a,b)=>a-b);
   const med=prices.length?prices[Math.floor(prices.length/2)]:null;
   const totalVol=data.reduce((s,r)=>s+(r.tope_anual_mwh||0),0);
   document.getElementById('kpiVigVal').textContent=data.length.toLocaleString('es');
@@ -1148,7 +1148,7 @@ function renderNewTable(){
     const tipo = r['TIPO RECURSO'];
     const tc   = tipo==='Renovable'?'tag-r':tipo==='No Renovable'?'tag-nr':'tag-na';
     const tipoLabel = tipo||'S/D';
-    const pr   = r.precio_usd!=null?r.precio_usd.toFixed(1)+' U$S':'—';
+    const pr   = r.precio_usd!=null?(typeof r.precio_usd==='number'?r.precio_usd.toFixed(1)+' U$S':String(r.precio_usd)):'—';
     const vol  = r.tope_anual_mwh!=null?r.tope_anual_mwh.toLocaleString('es-AR'):'—';
     const vn   = CUIT_NAMES[r['Vendedor']]||r['Vendedor']||'—';
     return `<tr>
