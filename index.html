@@ -255,8 +255,9 @@ const BA='rgba(74,158,255,.75)',AA='rgba(245,166,35,.7)';
 
 // ── Carga desde GitHub ────────────────────────────────────────────────────────
 // GitHub API — evita problemas de CORS con raw.githubusercontent.com
-const GITHUB_REPO  = 'daniraggio/dashboard-energia';
+const GITHUB_REPO  = 'daniraggio/dashboard-MEM';
 const GITHUB_BRANCH = 'main';
+const GITHUB_DATA_PATH = 'data/contratos';
 const EXCEL_FILES = {
   contratos:   'CONTRATOS.xlsx',
   topes:       'TOPES.xlsx',
@@ -278,10 +279,10 @@ function showLoadingError(msg){
     + '</div>';
 }
 
-async function fetchExcel(filename){
+async function fetchExcel(filename, optional){
   // Try raw.githubusercontent.com first, fall back to GitHub API (base64)
-  const rawUrl = 'https://raw.githubusercontent.com/' + GITHUB_REPO + '/' + GITHUB_BRANCH + '/data/' + filename;
-  const apiUrl = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/data/' + filename + '?ref=' + GITHUB_BRANCH;
+  const rawUrl = 'https://raw.githubusercontent.com/' + GITHUB_REPO + '/' + GITHUB_BRANCH + '/' + GITHUB_DATA_PATH + '/' + filename;
+  const apiUrl = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_DATA_PATH + '/' + filename + '?ref=' + GITHUB_BRANCH;
 
   let buf;
   try {
@@ -290,14 +291,23 @@ async function fetchExcel(filename){
     buf = await resp.arrayBuffer();
   } catch(e) {
     // Fallback: GitHub API returns base64-encoded content
-    const resp = await fetch(apiUrl, {headers:{'Accept':'application/vnd.github.v3.raw'}});
-    if(!resp.ok) throw new Error('No se pudo descargar ' + filename + ' (HTTP ' + resp.status + ')');
-    buf = await resp.arrayBuffer();
+    try {
+      const resp = await fetch(apiUrl, {headers:{'Accept':'application/vnd.github.v3.raw'}});
+      if(!resp.ok) throw new Error('No se pudo descargar ' + filename + ' (HTTP ' + resp.status + ')');
+      buf = await resp.arrayBuffer();
+    } catch(e2) {
+      if(optional){
+        console.warn('Archivo opcional no encontrado, se omite:', filename, e2.message);
+        return null;
+      }
+      throw e2;
+    }
   }
   return XLSX.read(new Uint8Array(buf), {type:'array'});
 }
 
 function parseColumn(wb, sheetIndex){
+  if(!wb) return [];
   const sheet = wb.Sheets[wb.SheetNames[sheetIndex||0]];
   return XLSX.utils.sheet_to_json(sheet, {defval:null});
 }
@@ -328,7 +338,7 @@ async function loadFromGitHub(){
     const wbTopes = await fetchExcel(EXCEL_FILES.topes);
 
     setLoadingMsg('Descargando Generador_por_conjunto.xlsx...');
-    const wbGen = await fetchExcel(EXCEL_FILES.generadores);
+    const wbGen = await fetchExcel(EXCEL_FILES.generadores, true); // opcional: puede no existir en el nuevo repo
 
     setLoadingMsg('Descargando PARÁMETROS_VARIABLES.xlsx...');
     const wbParams = await fetchExcel(EXCEL_FILES.params);
@@ -352,6 +362,11 @@ async function loadFromGitHub(){
       const code = m ? m[1].trim() : conj.trim();
       if(code) genTipo[code] = tipo;
     });
+    if(!wbGen){
+      console.warn('Generador_por_conjunto.xlsx no está disponible en el repo: la clasificación Renovable / No Renovable quedará vacía.');
+      const note = document.getElementById('chartNote');
+      if(note) note.innerHTML = 'mostrando todos los contratos vigentes &middot; <span style="color:var(--amber)">⚠ falta Generador_por_conjunto.xlsx en el repo: no se puede calcular Renovable/No Renovable</span>';
+    }
 
     // ── Parse precios from params ──
     const paramRows = parseColumn(wbParams);
