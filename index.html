@@ -148,12 +148,12 @@
 
 <div class="section-label">Métricas generales</div>
 <div class="kpi-row">
-  <div class="kpi-card"><div class="kpi-label">Total contratos</div><div class="kpi-value">2.300</div><div class="kpi-sub">todos los registros</div></div>
-  <div class="kpi-card"><div class="kpi-label">Selección</div><div class="kpi-value c-blue" id="kpiVigVal">1.924</div><div class="kpi-sub" id="kpiVigSub">contratos vigentes</div></div>
-  <div class="kpi-card"><div class="kpi-label">Renovables</div><div class="kpi-value c-green" id="kpiRenVal">1.585</div><div class="kpi-sub" id="kpiRenSub">69% del total</div></div>
-  <div class="kpi-card"><div class="kpi-label">Precio mediano</div><div class="kpi-value c-amber" id="kpiPrecioVal">60,5</div><div class="kpi-sub">U$S / MWh</div></div>
+  <div class="kpi-card"><div class="kpi-label">Total contratos</div><div class="kpi-value" id="kpiTotalVal">—</div><div class="kpi-sub">todos los registros</div></div>
+  <div class="kpi-card"><div class="kpi-label">Selección</div><div class="kpi-value c-blue" id="kpiVigVal">—</div><div class="kpi-sub" id="kpiVigSub">contratos vigentes</div></div>
+  <div class="kpi-card"><div class="kpi-label">Renovables</div><div class="kpi-value c-green" id="kpiRenVal">—</div><div class="kpi-sub" id="kpiRenSub">69% del total</div></div>
+  <div class="kpi-card"><div class="kpi-label">Precio mediano</div><div class="kpi-value c-amber" id="kpiPrecioVal">—</div><div class="kpi-sub">U$S / MWh</div></div>
   <div class="kpi-card"><div class="kpi-label">Vol. anual total</div><div class="kpi-value c-purple" id="kpiVolVal">—</div><div class="kpi-sub">MWh de la selección</div></div>
-  <div class="kpi-card"><div class="kpi-label">Vencen en 12 m.</div><div class="kpi-value c-red">692</div><div class="kpi-sub">próximo año</div></div>
+  <div class="kpi-card"><div class="kpi-label">Vencen en 12 m.</div><div class="kpi-value c-red" id="kpiVenceVal">—</div><div class="kpi-sub">próximo año</div></div>
 </div>
 <div class="section-label">Análisis · <span id="chartNote" style="font-weight:400;color:var(--text2)">mostrando todos los contratos vigentes</span></div>
 <div class="charts-row">
@@ -490,10 +490,15 @@ async function loadFromGitHub(){
     }
 
     // ── Merge into records ──
+    const en12m = new Date(today);
+    en12m.setFullYear(en12m.getFullYear() + 1);
+    let totalContratos = 0;
+    let venceEn12m = 0;
     const records = [];
     contratos.forEach(r => {
       const nro = String(r['Nro contrato']||'').padStart(6,'0');
       if(!nro || nro==='000000') return;
+      totalContratos++;
 
       const finRaw = r['Fin'];
       const iniRaw = r['Inicio'];
@@ -501,6 +506,8 @@ async function loadFromGitHub(){
       const iniDate = parseDate(iniRaw);
       if(!finDate || isNaN(finDate)) return;
       if(finDate < today) return; // solo vigentes
+
+      if(finDate <= en12m) venceEn12m++;
 
       const fin_str = finDate.toISOString().slice(0,10);
       const inicio_str = iniDate && !isNaN(iniDate) ? iniDate.toISOString().slice(0,10) : '';
@@ -544,6 +551,8 @@ async function loadFromGitHub(){
     // ── Update KPIs and charts ──
     const vigentes = ALL.length;
     const ren = ALL.filter(r=>r['TIPO RECURSO']==='Renovable').length;
+    document.getElementById('kpiTotalVal').textContent = totalContratos.toLocaleString('es');
+    document.getElementById('kpiVenceVal').textContent = venceEn12m.toLocaleString('es');
     document.querySelector('.kpi-value.c-blue') && (document.getElementById('kpiVigVal').textContent = vigentes.toLocaleString('es'));
 
     setLoadingMsg('Inicializando dashboard...');
