@@ -341,7 +341,9 @@ async function loadFromGitHub(){
     const wbGen = await fetchExcel(EXCEL_FILES.generadores, true); // opcional: puede no existir en el nuevo repo
 
     setLoadingMsg('Descargando PARÁMETROS_VARIABLES.xlsx...');
-    const wbParams = await fetchExcel(EXCEL_FILES.params);
+    const wbParams  = await fetchExcel(EXCEL_FILES.params);
+    // También intentar el archivo con espacio (nombre alternativo que puede coexistir en el repo)
+    const wbParams2 = await fetchExcel('PARAMETROS VARIABLES.xlsx', true);
 
     setLoadingMsg('Descargando CARACTERISTICAS.xlsx...');
     const wbCaract = await fetchExcel(EXCEL_FILES.caract);
@@ -368,8 +370,11 @@ async function loadFromGitHub(){
       if(note) note.innerHTML = 'mostrando todos los contratos vigentes &middot; <span style="color:var(--amber)">⚠ falta Generador_por_conjunto.xlsx en el repo: no se puede calcular Renovable/No Renovable</span>';
     }
 
-    // ── Parse precios from params ──
-    const paramRows = parseColumn(wbParams);
+    // ── Parse precios from params (combina ambos archivos si existen) ──
+    const paramRows = [
+      ...parseColumn(wbParams),
+      ...parseColumn(wbParams2),
+    ];
     const precioRows = {}; // nro -> array of {precio, ini, fin}
     paramRows.forEach(r => {
       const param = String(r['Parámetro']||r['Parametro']||'');
